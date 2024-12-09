@@ -140,6 +140,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Cubos.action"
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Figuras.action"
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Hand.action"
+    "/home/laboratorio/ros_workspace/src/proyecto_final/action/RL.action"
     )
 endif()
 
@@ -176,6 +177,18 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/HandGoal.msg"
     "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/HandResult.msg"
     "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/HandFeedback.msg"
+    )
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/proyecto_final/msg" TYPE FILE FILES
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLAction.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionGoal.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionResult.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionFeedback.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLGoal.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLResult.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLFeedback.msg"
     )
 endif()
 

@@ -28,7 +28,7 @@ class CubeTracker:
     Atributos:
         - frame (numpy array) - Almacena la imagen de entrada que se va a procesar.
     '''
-    def __init__(self, path:str, aruco_dict=cv2.aruco.DICT_4X4_50, marker_length=0.05) -> None:
+    def __init__(self, cam_calib_path:str, aruco_dict=cv2.aruco.DICT_4X4_50, marker_length=0.05) -> None:
         '''
         Inicializa la clase y configura los parámetros de Aruco.
             @param aruco_dict (int) - Diccionario de Aruco (por defecto, 4x4 con 50 marcadores).
@@ -37,11 +37,10 @@ class CubeTracker:
             @param dist_coeffs (numpy array) - Coeficientes de distorsión de la cámara.
         '''
         self.frame = None
-        self.frame = None
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict)
         self.aruco_params = cv2.aruco.DetectorParameters()
 
-        self._get_camara_calibration(path)
+        self._get_camara_calibration(cam_calib_path)
 
         self.marker_length = marker_length
         self.marker_position = None
@@ -152,7 +151,7 @@ class CubeTracker:
                             break
 
                     # Creamos diccionario con las características de la pieza
-                    dicionario_resultado.append({"Posicion": center, "Angulo": angle, "Color": color_map[color]})
+                    dicionario_resultado.append({"Position": center, "Angel": angle, "Color": color_map[color]})
                     
                     cv2.putText(resultado, color, (center[0] + 20, center[1] + 20), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 255), 1)
@@ -209,12 +208,19 @@ class CubeTracker:
         return resultado
 
 if __name__ == "__main__":
-    cam = cv2.VideoCapture(0)
-    camara = CubeTracker(path="src/proyecto_final/data/camera_data/ost.yaml")
-    if cam.isOpened():
-        _, frame = cam.read()
-    # frame = cv2.imread('ProyectoFinal/Cubos_Exparcidos/Aruco_1.png')
-        resultado = camara.analizar_imagen(frame,area_size=800,mostrar=True)
-        cam.release()
+    use_cam = False
+    cube_tracker = CubeTracker(cam_calib_path="src/proyecto_final/data/camera_data/ost.yaml")
+
+    if use_cam:
+        cam = cv2.VideoCapture(0)
+        if cam.isOpened():
+            _, frame = cam.read()
     else:
-        print("ERROR")
+        num = 1
+        ruta = f'/home/laboratorio/ros_workspace/src/proyecto_final/data/example_img/Cubos_Exparcidos/Cubos_Exparcidos_{num}.png'
+        frame = cv2.imread(ruta)
+
+    resultado = cube_tracker.analizar_imagen(frame, area_size=800, mostrar=True)
+    print(resultado)
+    if use_cam:
+        cam.release()

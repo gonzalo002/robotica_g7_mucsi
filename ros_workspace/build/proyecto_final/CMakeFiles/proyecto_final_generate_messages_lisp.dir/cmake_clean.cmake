@@ -22,6 +22,13 @@ file(REMOVE_RECURSE
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/HandGoal.lisp"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/HandResult.lisp"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/IdCubos.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLAction.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLActionFeedback.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLActionGoal.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLActionResult.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLFeedback.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLGoal.lisp"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/common-lisp/ros/proyecto_final/msg/RLResult.lisp"
   "CMakeFiles/proyecto_final_generate_messages_lisp"
 )
 

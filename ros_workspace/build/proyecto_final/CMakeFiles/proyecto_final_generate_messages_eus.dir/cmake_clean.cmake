@@ -23,6 +23,13 @@ file(REMOVE_RECURSE
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/HandGoal.l"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/HandResult.l"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/IdCubos.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLAction.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLActionFeedback.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLActionGoal.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLActionResult.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLFeedback.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLGoal.l"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/roseus/ros/proyecto_final/msg/RLResult.l"
   "CMakeFiles/proyecto_final_generate_messages_eus"
 )
 

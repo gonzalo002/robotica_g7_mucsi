@@ -71,6 +71,7 @@ add_action_files(
   Cubos.action
   Figuras.action
   Hand.action
+  RL.action
 )
 
 ## Generate added messages and services with any dependencies listed here

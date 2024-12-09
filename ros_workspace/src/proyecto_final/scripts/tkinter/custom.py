@@ -1,18 +1,25 @@
+#!/usr/bin/python3
+
+import os
+# Configurar la variable de entorno para que no aparezcan mensajes de error de index de camara
+os.environ["OPENCV_LOG_LEVEL"] = "FATAL"
+
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter.font import Font
 from tkinter import filedialog, IntVar
 from PIL import Image, ImageTk, Image, ImageDraw, ImageFont
-import cv2
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL.ImageTk import PhotoImage
+import cv2
 
 from image_processor_top import ImageProcessor_Top
 from image_processor_front import ImageProcessor_Front
 from cube_tracker import CubeTracker
 from camera_controller import CameraController
+from geometry import FigureGenerator
 #from TKINTER.camera_controller import CameraController
 
 class DynamicTabsApp:
@@ -29,18 +36,18 @@ class DynamicTabsApp:
         #Definicion clases
         self.ImageProcessorFrontal = ImageProcessor_Front()
         self.ImageProcessorPlanta = ImageProcessor_Top()
-        self.CubeLocalizator = CubeTracker("ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
+        self.CubeLocalizator = CubeTracker("/home/laboratorio/ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
+        self.FigureGenerator = FigureGenerator()
 
 
         #Definicion camara
         self.camera_controller = CameraController(10)
-        self.cap_1 = cv2.VideoCapture(0)
-        self.cap_2 = None
 
         #Definicion geometria
         self.plant_matrix = np.full((5,5), -1)
         self.side_matrix = np.full((5,5), -1)
         self.width = 320
+        
 
         #Definicion imagenes
         self.img_front = None
@@ -222,24 +229,33 @@ class DynamicTabsApp:
         self.geometry_frame = ttk.LabelFrame(self.frame_vision, text="Geometría")
         self.geometry_frame.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
 
-        fig_3d = self._draw_pyramid_from_matrices(self.plant_matrix, self.side_matrix)
+        fig_3d = self.FigureGenerator.generate_figure_from_matrix(self.plant_matrix, self.side_matrix, True)
 
         # Mostrar la figura 3D en el canvas
         self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.geometry_frame)
         self.canvas_3d.get_tk_widget().pack(padx=0, pady=0)
 
-        # FRAME: Mesa de Trabajo
+        # --- MESA DE TRABAJO ---
         self.label_frame_2 = ttk.LabelFrame(self.frame_vision, text="Mesa de Trabajo")
         self.label_frame_2.grid(row=2, column=0, padx=[10,90], pady=10,  sticky="nsew")
         
         
 
         self.lbl_vision_figure3 = ttk.Label(self.label_frame_2)
-        self.lbl_vision_figure3.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        self.lbl_vision_figure3.grid(row=0, rowspan=10, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        
         self.camera_entry3 = ttk.Combobox(self.label_frame_2,values=self.camera_controller.camera_names,  font=("Montserrat", 10))
-        self.camera_entry3.grid(row=1, column=0, columnspan=4, padx=10, pady=[5,10], sticky="nsew")
+        self.camera_entry3.grid(row=0, column=5, columnspan=2, padx=[10,0], pady=10, sticky="nsew")
         if len(self.camera_controller.cameras) > 0:
             self.camera_entry3.set(self.camera_controller.camera_names[0])
+            
+        self.update_camera_button = ttk.Button(
+            self.label_frame_2,
+            text="Actualizar camaras",
+            command=self.update_cameras,  # Función para procesar las imágenes
+            bootstyle="warning",  # Estilo del botón
+        )
+        self.update_camera_button.grid(row=9, column=5, columnspan=2, padx=[10,0], pady=10, sticky="nsew")
 
         # --- GEOMETRY LABEL FRAME ---
         self.geometry_2d_frame = ttk.LabelFrame(self.frame_vision, text="Espacio")
@@ -304,65 +320,42 @@ class DynamicTabsApp:
     def stop_camera(self):
         """Detiene el feed de la cámara."""
         self.camera_active = False
-        if self.cap_1:
-            self.lbl_vision_figure1.config(image=None)
-        if self.cap_2:
-            self.cap_2.release()
-            self.lbl_vision_figure2.config(image=None)
 
-    
-    def update_camera_feed_1(self):
-        if self.state_procesar:
-            if self.camera_active and self.camera_entry1 is not None:
-                index = self.camera_controller.camera_names.index(self.camera_entry1.get())
-                frame = self.camera_controller.get_frame(index)
-
-                if frame is not None:
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    self.img_front = frame
-                    img = Image.fromarray(frame)
-
-                    # Redimensionar la imagen
-                    aspect_ratio = img.height / img.width
-                    height = int(self.width * aspect_ratio)
-                    img = img.resize((self.width, height), Image.Resampling.LANCZOS)
-                    imgtk = ImageTk.PhotoImage(image=img)
-                
-                else:
-                    imgtk = self._create_image_with_text("Cámara NO encontrada")
-                    self.img_front = None
-
-            else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada")
-                self.img_front = None
-
-            self.lbl_vision_figure1.config(image=imgtk)
-            self.lbl_vision_figure1.image = imgtk
-            self.lbl_vision_figure1.update()
-            
-        self.root.after(10, self.update_camera_feed_1)
-    
-    def _update_camera(self, camera_index, size:int=0):
+    def _update_camera(self, camera_index, size:list=(320, 240)):
         frame = self.camera_controller.get_frame(camera_index)
 
         if frame is not None:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            self.img_front = frame
-            img = Image.fromarray(frame)
+            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
             # Redimensionar la imagen
             aspect_ratio = img.height / img.width
-            if size == 0:
-                height = int(self.width * aspect_ratio)
-                img = img.resize((self.width, height), Image.Resampling.LANCZOS)
-            else:
-                height = int(size * aspect_ratio)
-                img = img.resize((size, height), Image.Resampling.LANCZOS)
+            height = int(size[0] * aspect_ratio)
+            img = img.resize((size[0], height), Image.Resampling.LANCZOS)
             imgtk = ImageTk.PhotoImage(image=img)
         else:
-            imgtk = self._create_image_with_text("Cámara NO encontrada")
+            imgtk = self._create_image_with_text("Cámara NO encontrada", size)
         
         return imgtk, frame
+    
+    def update_camera_feed_1(self):
+        if self.state_procesar:
+            if self.camera_active and self.camera_entry1.get() != '':
+                index = self.camera_controller.camera_names.index(self.camera_entry1.get())
+                imgtk, frame = self._update_camera(index)
+
+            else:
+                imgtk = self._create_image_with_text("Cámara NO encontrada")
+                frame = None
+
+            self.img_plant = frame
+            self.lbl_vision_figure1.config(image=imgtk)
+            self.lbl_vision_figure1.image = imgtk
+            self.lbl_vision_figure1.update()
+
+        # Es como un hilo, se llama a sí misma después de 10ms
+        self.root.after(10, self.update_camera_feed_1)
+
+    
     
     def update_camera_feed_2(self):
         """Actualiza el feed de la cámara y lo muestra en el Label."""
@@ -385,19 +378,18 @@ class DynamicTabsApp:
 
     def update_camera_feed_3(self):
         """Actualiza el feed de la cámara y lo muestra en el Label."""
-        if self.state_procesar:
-            if self.camera_entry3.get() != '':
-                index = self.camera_controller.camera_names.index(self.camera_entry3.get())
-                imgtk, frame = self._update_camera(index, 480)
+        if self.camera_entry3.get() != '':
+            index = self.camera_controller.camera_names.index(self.camera_entry3.get())
+            imgtk, frame = self._update_camera(index, (480, 360))
 
-            else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada")
-                frame = None
+        else:
+            imgtk = self._create_image_with_text("Cámara NO encontrada")
+            frame = None
 
-            self.img_front = frame
-            self.lbl_vision_figure3.config(image=imgtk)
-            self.lbl_vision_figure3.image = imgtk
-            self.lbl_vision_figure3.update()
+        self.img_ws = frame
+        self.lbl_vision_figure3.config(image=imgtk)
+        self.lbl_vision_figure3.image = imgtk
+        self.lbl_vision_figure3.update()
             
         self.root.after(12, self.update_camera_feed_3)
 
@@ -472,11 +464,12 @@ class DynamicTabsApp:
 
             front_matrix, img_procesed_front = self.ImageProcessorFrontal.process_image(self.img_front, area_size=800)
             plant_matrix, img_procesed_plant = self.ImageProcessorPlanta.process_image(self.img_plant, area_size=800)
-
+            
+            
 
             #Resize
-            img_procesed_front = Image.fromarray(img_procesed_front)
-            img_procesed_plant = Image.fromarray(img_procesed_plant)
+            img_procesed_front = Image.fromarray(cv2.cvtColor(img_procesed_front, cv2.COLOR_BGR2RGB))
+            img_procesed_plant = Image.fromarray(cv2.cvtColor(img_procesed_plant, cv2.COLOR_BGR2RGB))
             photo1 = self._resize_image(img_procesed_plant, self.width)
             photo2 = self._resize_image(img_procesed_front, self.width)
 
@@ -488,7 +481,7 @@ class DynamicTabsApp:
             self.lbl_vision_figure2.config(image=photo2)
             self.lbl_vision_figure2.image = photo2
 
-            fig_3d = self._draw_pyramid_from_matrices(plant_matrix, front_matrix)
+            fig_3d = self.FigureGenerator.generate_figure_from_matrix(plant_matrix, front_matrix)
 
              # Actualizar canvas_3d
             if hasattr(self, "canvas_3d") and self.canvas_3d is not None:
@@ -507,10 +500,10 @@ class DynamicTabsApp:
     def clear_images(self):
         self.clear_button.state([ttk.DISABLED])
         self.process_button.state(["!disabled"])
-        self.state_procesar = False
+        self.state_procesar = True
 
         # --- VACIAR MATRIZ ---
-        fig_3d = self._draw_pyramid_from_matrices(self.plant_matrix, self.side_matrix)
+        fig_3d = self.FigureGenerator.generate_figure_from_matrix(self.plant_matrix, self.side_matrix)
 
         if hasattr(self, "canvas_3d") and self.canvas_3d is not None:
                 # Eliminar canvas previo si existe
@@ -520,9 +513,20 @@ class DynamicTabsApp:
         self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.geometry_frame)
         self.canvas_3d.get_tk_widget().pack(padx=0, pady=0)
 
-        self._update_images()
+        #self._update_images()
         self.toggle_mode()
 
+    def update_cameras(self):
+        self.camera_controller.stop()
+        self.camera_controller.start(10)
+        self.camera_entry1['values'] = self.camera_controller.camera_names
+        self.camera_entry2['values'] = self.camera_controller.camera_names
+        self.camera_entry3['values'] = self.camera_controller.camera_names
+        
+        
+        
+        
+        
 # Función para actualizar las imágenes en la interfaz
     def _update_images(self):
         img1 = self._create_image_with_text("CARGAR IMAGEN")
@@ -566,57 +570,6 @@ class DynamicTabsApp:
         
         return tk_image
 
-    def _draw_pyramid_from_matrices(self, plant_matrix, side_matrix):
-        fig_3d = plt.Figure(figsize=(8, 4), dpi=100)
-        ax = fig_3d.add_subplot(111, projection='3d')
-
-        # Definir los colores de los cubos
-        colors = {0: 'red', 1: 'green', 2: 'blue', 3: 'yellow'}
-
-        # Definir el tamaño de cada cubo
-        size = 1
-
-        # Iterar sobre las matrices para colocar los cubos
-        for i in range(len(plant_matrix)):  # Para cada fila de la planta
-            for j in range(len(plant_matrix[i])):  # Para cada columna de la planta
-                if plant_matrix[i][j] != -1:  # Si hay un cubo en la vista de planta
-                    # Obtener la altura del cubo desde la vista lateral
-                    height = -1
-                    for k in range(len(side_matrix)):
-                        if side_matrix[k][j] != -1 and side_matrix[k][j] == plant_matrix[i][j]:
-                            height = (len(side_matrix) * size) - 1 - k
-                            break
-
-                    # Asegurarse de que los cubos debajo también se dibujan en gris
-                    for k in range(height):  # Dibujar los cubos en gris debajo del cubo actual
-                        ax.bar3d(((len(side_matrix) * size) - 1 - j) * size, 
-                                ((len(side_matrix) * size) - 1 - i) * size, 
-                                k * size,  # Z de los cubos en gris
-                                size, size, size, 
-                                color='gray')
-
-                    # Dibujar el cubo en la posición (x, y, z)
-                    if height != -1:
-                        ax.bar3d(((len(side_matrix) * size) - 1 - j) * size, 
-                                ((len(side_matrix) * size) - 1 - i) * size, 
-                                height * size,  # Altura del cubo
-                                size, size, size, 
-                                color=colors[plant_matrix[i][j]])
-
-        # Configurar los límites del gráfico
-        ax.set_xlim([0, len(plant_matrix[0]) * size])
-        ax.set_ylim([0, len(plant_matrix) * size])
-        ax.set_zlim([0, len(side_matrix) * size])
-
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-
-        # Ajustar la vista para que la figura se vea al fondo
-        ax.view_init(elev=30, azim=-60)
-
-
-        return fig_3d
     
 
     def draw_2d_space_tkinter(self, cube_data):

@@ -22,6 +22,13 @@ file(REMOVE_RECURSE
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/HandGoal.h"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/HandResult.h"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/IdCubos.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLAction.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLActionFeedback.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLActionGoal.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLActionResult.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLFeedback.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLGoal.h"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/include/proyecto_final/RLResult.h"
   "CMakeFiles/proyecto_final_generate_messages_cpp"
 )
 
