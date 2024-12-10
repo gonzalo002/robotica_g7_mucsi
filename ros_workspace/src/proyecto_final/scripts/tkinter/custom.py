@@ -36,7 +36,11 @@ class DynamicTabsApp:
         #Definicion clases
         self.ImageProcessorFrontal = ImageProcessor_Front()
         self.ImageProcessorPlanta = ImageProcessor_Top()
+<<<<<<< HEAD
         self.CubeLocalizator = CubeTracker("/home/laboratorio/ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
+=======
+        self.CubeLocalizator = CubeTracker("ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
+>>>>>>> 02145a90b86fc69c9843b05f653d880b56d5cde1
         self.FigureGenerator = FigureGenerator()
 
 
@@ -570,6 +574,12 @@ class DynamicTabsApp:
         
         return tk_image
 
+<<<<<<< HEAD
+=======
+    def _draw_pyramid_from_matrices(self, plant_matrix, side_matrix):
+        return self.FigureGenerator._draw_pyramid_from_matrices(plant_matrix, side_matrix, True)
+
+>>>>>>> 02145a90b86fc69c9843b05f653d880b56d5cde1
     
 
     def draw_2d_space_tkinter(self, cube_data):

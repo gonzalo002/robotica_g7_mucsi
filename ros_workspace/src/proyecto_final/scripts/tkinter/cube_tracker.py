@@ -217,4 +217,8 @@ if __name__ == "__main__":
         resultado = camara.analizar_imagen(frame,area_size=800,mostrar=True)
         cam.release()
     else:
+<<<<<<< HEAD
         print("ERROR")
+=======
+        print("ERROR")
+>>>>>>> 02145a90b86fc69c9843b05f653d880b56d5cde1

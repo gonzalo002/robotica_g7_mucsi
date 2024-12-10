@@ -304,4 +304,8 @@ if __name__ == "__main__":
     ruta = 'ProyectoFinal\Figuras_Lateral\Figura4_L.png'
     processor = ImageProcessor_Front()
     frame = cv2.imread(ruta)
+<<<<<<< HEAD
     processor.process_image(frame, mostrar = True)
+=======
+    processor.process_image(frame, mostrar = True)
+>>>>>>> 02145a90b86fc69c9843b05f653d880b56d5cde1

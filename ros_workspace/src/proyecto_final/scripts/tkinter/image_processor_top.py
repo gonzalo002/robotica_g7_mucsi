@@ -308,4 +308,8 @@ if __name__ == "__main__":
     processor = ImageProcessor_Top()
     frame = cv2.imread(ruta)
     matriz, imagen = processor.process_image(frame,area_size=800, mostrar = True)
+<<<<<<< HEAD
     print(matriz)
+=======
+    print(matriz)
+>>>>>>> 02145a90b86fc69c9843b05f653d880b56d5cde1
