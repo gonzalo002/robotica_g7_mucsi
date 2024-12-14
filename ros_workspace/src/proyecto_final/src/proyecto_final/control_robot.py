@@ -113,9 +113,13 @@ class ControlRobot:
         if len(pos_list) != 3 or len(ori_list) != 4: return False
         return list_to_pose(pose_list=pos_list)
     
-    def save_in_yaml(self, doc_name:str, key_name:str, data:list) -> None:
+    def save_in_yaml(self, doc_name:str, key_name:str, data:list, delete_info:bool=False) -> None:
         diccionario_configuraciones = {key_name:data}
-        with open(doc_name, '+a') as f:
+        if delete_info:
+            mode = '+w'
+        else:
+            mode = '+a'
+        with open(doc_name, mode) as f:
             yaml.dump(diccionario_configuraciones, f)
     
     def read_from_yaml(self, doc_name:str, key_name:str) -> list:
@@ -164,7 +168,9 @@ class ControlRobot:
 
 if __name__ == '__main__':
     control = ControlRobot('robot')
-    control.save_in_yaml('pose_aruco', 'pose', control.get_pose())
+    
+    control.move_jointstates(control.read_from_yaml('/home/laboratorio/ros_workspace/src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/master_points', 'drop_place_origin'))
+    control.save_in_yaml('/home/laboratorio/ros_workspace/src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/puntos_dejada', 'Discard_Ini', control.get_pose())
     
     #trayectoria=[]
     #punto = control.get_pose()

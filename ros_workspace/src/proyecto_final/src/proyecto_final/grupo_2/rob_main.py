@@ -6,7 +6,7 @@ sys.path.append("/home/laboratorio/ros_workspace/src/proyecto_final/src/proyecto
 
 from control_robot import ControlRobot
 import numpy as np
-from cube_tracker import CubeTracker
+from proyecto_final.vision.grupo_2.cube_tracker import CubeTracker
 import cv2
 from copy import deepcopy
 import rospy
@@ -26,20 +26,24 @@ class SecuenceCommander:
         self.simulation = simulation
 
         self.action_client = MasterClient()
+        self.abs_path = "/home/laboratorio/ros_workspace/src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/"
 
-        self.figure_origin:Pose = self.robot.read_from_yaml(f'./src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/puntos_dejada', 'Matrix_Ini')
-        self.discard_origin:Pose = self.robot.read_from_yaml(f'./src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/puntos_dejada', 'Discard_Ini')
+        self.figure_origin:Pose = self.robot.read_from_yaml(f'{self.abs_path}puntos_dejada', 'Matrix_Ini')
+        self.discard_origin:Pose = self.robot.read_from_yaml(f'{self.abs_path}puntos_dejada', 'Discard_Ini')
         self.discarded_cubes:list = [0, 0, 0, 0] # RGBY
 
-        self.home:JointState = self.robot.read_from_yaml('src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/master_points', 'home')
-        self.link1:JointState = self.robot.read_from_yaml('src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/master_points', 'enlace_1')
-        self.joint_fuera_camara:JointState = self.robot.read_from_yaml('src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/master_points', 'fuera_rango_vision')
+        self.link1:JointState = self.robot.read_from_yaml(f'{self.abs_path}master_points', 'enlace_1')
+        self.joint_fuera_camara:JointState = self.robot.read_from_yaml(f'{self.abs_path}master_points', 'fuera_rango_vision')
+        self.home:JointState = self.robot.read_from_yaml(f'{self.abs_path}master_points', 'home')
+        self.pose_aruco = Pose()
+        
 
         self.reset:bool = False
         self.start:bool = False
         self.retry:bool = False
+        
 
-        self.workspace_range = {'x_max': 10, 'x_min': 0, 'y_max': 10, 'y_min': 0}
+        self.workspace_range = {'x_max': 10, 'x_min': -10, 'y_max': 10, 'y_min': -10}
          
     def moveJoint(self, jointstate:JointState) -> bool:      
         success = self.robot.move_jointstates(jointstate)
@@ -59,7 +63,14 @@ class SecuenceCommander:
             rospy.logwarn('Pose inalcanzable')
         return success
     
-    def empty_workspace(self, cubos:List[IdCubos], x_max:int, x_min:int, y_max:int, y_min:int):        
+    def empty_workspace(self, cubos:List[IdCubos]):
+        x_min = self.workspace_range['x_min']
+        y_min = self.workspace_range['y_min']        
+        x_max = self.workspace_range['x_max']        
+        y_max = self.workspace_range['y_max']   
+        
+        self.moveJoint(self.link1)     
+                
         for cube_id, cubo in enumerate(cubos):
             pose = deepcopy(cubo.pose)
             color = cubo.color
@@ -73,22 +84,18 @@ class SecuenceCommander:
         if not self.simulation:
             gripper, _ = self.robot.get_pinza_state()
             if  gripper < 20.0:
-                self.robot.move_gripper(30.0, 10.0, 0.8)
+                self.robot.move_gripper(80.0, 10.0, 0.8)
         pose_previa = deepcopy(pose)
-        if pose.position.z > 0.3:
-            pose_previa.position.z += 0.15
-        else:
-            pose_previa.position.z += 0.3
 
-        pose.position.z +=0.25
+        pose_previa.position.z = 0.3
 
         self.movePose(pose_previa)
 
         if self.robot.move_carthesian_trayectory([pose_previa, pose]):
             if cube_id != None:
-                self.robot.scene.attach_box(link='onrobot_rg2_base_link', name=f'cubo{cube_id}')
+                self.robot.scene.attach_box(link='onrobot_rg2_base_link', name=f'Cubo_{cube_id}')
             if not self.simulation:
-                self.robot.move_gripper(0.0, 10.0, 0.8)
+                self.robot.move_gripper(0.0, 10.0, 1.5)
             if self.robot.move_carthesian_trayectory([pose, pose_previa]):
                 self.moveJoint(self.link1)
 
@@ -121,17 +128,13 @@ class SecuenceCommander:
 
         if self.movePose(pose):
         # if self.robot.set_carthesian_path([pose_previa, pose]):
-            self.robot.scene.remove_attached_object(link='onrobot_rg2_base_link', name=f'cubo{cube_id}')
+            self.robot.scene.remove_attached_object(link='onrobot_rg2_base_link', name=f'Cubo_{cube_id}')
             if not self.simulation:
                 self.robot.move_gripper(30.0, 10.0)
             if self.robot.move_carthesian_trayectory([pose, pose_previa]):
                 self.moveJoint(self.home)
-    
-    def generate_cubes(self, cubos:List[IdCubos]):
-        for i, cubo in enumerate(cubos):
-            pose = cubo.pose
-            self.robot.add_box_obstacle(f"cubo{i}", pose, (0.02, 0.02, 0.02))
-
+                
+                
     def track_cubes(self, cam_id:int, use_cam:bool = True, mostrar:bool = True, debug:bool = False) -> dict:
         self.free_camera_space()
 
@@ -145,59 +148,106 @@ class SecuenceCommander:
             frame = cv2.imread(ruta)
         
         _, resultado = self.cube_tracker.process_image(frame, area_size=1000, mostrar=mostrar, debug=debug)
+        
+        cubos = self.dict_to_cube(resultado)
+        
+        return self.cube_to_aruco(cubos)
 
-        return resultado
 
-    def try_pickup(self, dict_cubos, get_aruco_pose:bool=True):
+    def otro(self, cubos, get_aruco_pose:bool=True):
         if get_aruco_pose:
-            pose_aruco = self.rob_camera_calibration()
+            self.moveJoint(self.robot.read_from_yaml(f'{self.abs_path}master_points', 'get_aruco'))
+            self.pose_aruco = self.rob_camera_calibration()
         else:
-            pose_aruco = self.robot.read_from_yaml('/home/laboratorio/ros_workspace/src/proyecto_final/src/proyecto_final/grupo_2/trayectorias/pose_aruco', 'pose')
+            self.pose_aruco = self.robot.read_from_yaml(f'{self.abs_path}pose_aruco', 'pose')
 
-        for dict in dict_cubos:
-            position = dict['Position']
-
-            angle = dict['Angle']
-            color = dict['Color']
-
-            pose = deepcopy(pose_aruco)
-            pose.position.x += position[0]
-            pose.position.y += position[1]
-            pose.position.z = 0.01
-
-            pose.orientation = Quaternion(*quaternion_from_euler(pi, 0, angle, 'sxyz'))
+        for cubo in cubos:
+            pose = deepcopy(self.pose)
+            pose.position.x += cubo.pose.position.x
+            pose.position.y += cubo.pose.position.y
+            pose.position.z = cubo.pose.position.z
+            
+            pose.orientation = cubo.pose.orientation
 
             self.moveJoint(self.link1)
 
             self.pick_cube(pose)
+            
+    def cube_to_aruco(self, cubos:list):
+        for i, cubo in enumerate(cubos):
+            cubo.pose.position.x += self.pose_aruco.position.x
+            cubo.pose.position.y += self.pose_aruco.position.y  
+                   
+            self.robot.add_box_obstacle(f"Cubo_{i}", cubo.pose, (0.02, 0.02, 0.02))
+            
+            cubo.pose.position.z = 0.235
+            
+        return cubos
+            
+    
+    def dict_to_cube(self, dict_cubos:list) -> list:
+        cubos = []
+        for dict in dict_cubos:
+            cubo = IdCubos()
+            
+            positions = dict['Position']
+            angle = dict['Angle']
+            color = dict['Color']
 
+            cubo.pose.position.x = positions[0]
+            cubo.pose.position.y = positions[1]
+            cubo.pose.position.z = 0.01
+            
+            cubo.pose.orientation = Quaternion(*quaternion_from_euler(pi, 0, -angle, 'sxyz'))
 
+            cubo.color = color
+            cubos.append(cubo)
+            
+        return cubos
 
     def rob_camera_calibration(self):
+        self.robot.move_gripper(30, 10)
+        
+        self.moveJoint(self.robot.read_from_yaml(f'{self.abs_path}master_points', 'get_aruco'))
+        
+        input('Boli instaldo?: ')
+        self.robot.move_gripper(0, 5)
+        rospy.sleep(2)
+        
         # Obtener datos pose aruco
         print('LLevar robot ')
         input('Robot en Pose Aruco?: ')
-
+        
+        self.robot.move_gripper(30, 10)
+        rospy.sleep(2)
+        
         pose = self.robot.get_pose()
-        self.robot.save_in_yaml('pose_aruco', 'pose', pose)
+        self.robot.save_in_yaml(f'{self.abs_path}pose_aruco', 'pose_aruco', pose, True)
 
         return pose
 
     def free_camera_space(self):
         self.moveJoint(self.joint_fuera_camara)
 
-    def main(self):
+    def main(self, get_aruco:bool = False):
+        if get_aruco:
+            self.pose_aruco = self.rob_camera_calibration()
+        else:
+            self.pose_aruco = self.robot.read_from_yaml(f'{self.abs_path}pose_aruco', 'pose_aruco')
         cubos = self.track_cubes(cam_id = 0, use_cam=True)
+        
+        self.empty_workspace(cubos=cubos)
 
-        self.moveJoint(self.home)
-        self.try_pickup(cubos, True)
+        #self.moveJoint(self.home)
+        # self.try_pickup(cubos, False)
+        
 
 if __name__ == '__main__':
     use_cam = True
     
     robot = SecuenceCommander(simulation=False)
-
-    robot.main()
+    #robot.free_camera_space()
+    robot.main(False)
 
 
 

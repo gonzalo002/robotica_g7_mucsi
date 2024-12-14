@@ -1,0 +1,111 @@
+; Auto-generated. Do not edit!
+
+
+(cl:in-package proyecto_final-msg)
+
+
+;//! \htmlinclude RLGoal.msg.html
+
+(cl:defclass <RLGoal> (roslisp-msg-protocol:ros-message)
+  ((cubes_position
+    :reader cubes_position
+    :initarg :cubes_position
+    :type (cl:vector proyecto_final-msg:IdCubos)
+   :initform (cl:make-array 0 :element-type 'proyecto_final-msg:IdCubos :initial-element (cl:make-instance 'proyecto_final-msg:IdCubos)))
+   (cubes_order
+    :reader cubes_order
+    :initarg :cubes_order
+    :type (cl:vector cl:fixnum)
+   :initform (cl:make-array 0 :element-type 'cl:fixnum :initial-element 0)))
+)
+
+(cl:defclass RLGoal (<RLGoal>)
+  ())
+
+(cl:defmethod cl:initialize-instance :after ((m <RLGoal>) cl:&rest args)
+  (cl:declare (cl:ignorable args))
+  (cl:unless (cl:typep m 'RLGoal)
+    (roslisp-msg-protocol:msg-deprecation-warning "using old message class name proyecto_final-msg:<RLGoal> is deprecated: use proyecto_final-msg:RLGoal instead.")))
+
+(cl:ensure-generic-function 'cubes_position-val :lambda-list '(m))
+(cl:defmethod cubes_position-val ((m <RLGoal>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:cubes_position-val is deprecated.  Use proyecto_final-msg:cubes_position instead.")
+  (cubes_position m))
+
+(cl:ensure-generic-function 'cubes_order-val :lambda-list '(m))
+(cl:defmethod cubes_order-val ((m <RLGoal>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:cubes_order-val is deprecated.  Use proyecto_final-msg:cubes_order instead.")
+  (cubes_order m))
+(cl:defmethod roslisp-msg-protocol:serialize ((msg <RLGoal>) ostream)
+  "Serializes a message object of type '<RLGoal>"
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'cubes_position))))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
+  (cl:map cl:nil #'(cl:lambda (ele) (roslisp-msg-protocol:serialize ele ostream))
+   (cl:slot-value msg 'cubes_position))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'cubes_order))))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
+    (cl:write-byte (cl:ldb (cl:byte 8 24) __ros_arr_len) ostream))
+  (cl:map cl:nil #'(cl:lambda (ele) (cl:let* ((signed ele) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 256) signed)))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
+    ))
+   (cl:slot-value msg 'cubes_order))
+)
+(cl:defmethod roslisp-msg-protocol:deserialize ((msg <RLGoal>) istream)
+  "Deserializes a message object of type '<RLGoal>"
+  (cl:let ((__ros_arr_len 0))
+    (cl:setf (cl:ldb (cl:byte 8 0) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
+  (cl:setf (cl:slot-value msg 'cubes_position) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'cubes_position)))
+    (cl:dotimes (i __ros_arr_len)
+    (cl:setf (cl:aref vals i) (cl:make-instance 'proyecto_final-msg:IdCubos))
+  (roslisp-msg-protocol:deserialize (cl:aref vals i) istream))))
+  (cl:let ((__ros_arr_len 0))
+    (cl:setf (cl:ldb (cl:byte 8 0) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
+    (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
+  (cl:setf (cl:slot-value msg 'cubes_order) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'cubes_order)))
+    (cl:dotimes (i __ros_arr_len)
+    (cl:let ((unsigned 0))
+      (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:aref vals i) (cl:if (cl:< unsigned 128) unsigned (cl:- unsigned 256)))))))
+  msg
+)
+(cl:defmethod roslisp-msg-protocol:ros-datatype ((msg (cl:eql '<RLGoal>)))
+  "Returns string type for a message object of type '<RLGoal>"
+  "proyecto_final/RLGoal")
+(cl:defmethod roslisp-msg-protocol:ros-datatype ((msg (cl:eql 'RLGoal)))
+  "Returns string type for a message object of type 'RLGoal"
+  "proyecto_final/RLGoal")
+(cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<RLGoal>)))
+  "Returns md5sum for a message object of type '<RLGoal>"
+  "00c77b90e2e9e683fc61ff6f0f03ee7d")
+(cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'RLGoal)))
+  "Returns md5sum for a message object of type 'RLGoal"
+  "00c77b90e2e9e683fc61ff6f0f03ee7d")
+(cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<RLGoal>)))
+  "Returns full string definition for message of type '<RLGoal>"
+  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%#goal definition~%IdCubos[] cubes_position~%int8[]  cubes_order~%~%================================================================================~%MSG: proyecto_final/IdCubos~%int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
+(cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'RLGoal)))
+  "Returns full string definition for message of type 'RLGoal"
+  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%#goal definition~%IdCubos[] cubes_position~%int8[]  cubes_order~%~%================================================================================~%MSG: proyecto_final/IdCubos~%int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
+(cl:defmethod roslisp-msg-protocol:serialization-length ((msg <RLGoal>))
+  (cl:+ 0
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'cubes_position) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ (roslisp-msg-protocol:serialization-length ele))))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'cubes_order) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
+))
+(cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <RLGoal>))
+  "Converts a ROS message object to a list"
+  (cl:list 'RLGoal
+    (cl:cons ':cubes_position (cubes_position msg))
+    (cl:cons ':cubes_order (cubes_order msg))
+))

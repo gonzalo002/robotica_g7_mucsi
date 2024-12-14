@@ -18,7 +18,7 @@ import cv2
 from image_processor_top import ImageProcessor_Top
 from image_processor_front import ImageProcessor_Front
 from cube_tracker import CubeTracker
-from camera_controller import CameraController
+from proyecto_final.scripts.vision.grupo_2.camera_controller import CameraController
 from geometry import FigureGenerator
 #from TKINTER.camera_controller import CameraController
 

@@ -129,6 +129,10 @@ file(INSTALL DESTINATION "/home/laboratorio/ros_workspace/install" TYPE FILE FIL
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  include("/home/laboratorio/ros_workspace/build/proyecto_final/catkin_generated/safe_execute_install.cmake")
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/proyecto_final/msg" TYPE FILE FILES
     "/home/laboratorio/ros_workspace/src/proyecto_final/msg/IdCubos.msg"
     "/home/laboratorio/ros_workspace/src/proyecto_final/msg/HandData.msg"
@@ -140,6 +144,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Cubos.action"
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Figuras.action"
     "/home/laboratorio/ros_workspace/src/proyecto_final/action/Hand.action"
+    "/home/laboratorio/ros_workspace/src/proyecto_final/action/RL.action"
     )
 endif()
 
@@ -180,6 +185,18 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/proyecto_final/msg" TYPE FILE FILES
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLAction.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionGoal.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionResult.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLActionFeedback.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLGoal.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLResult.msg"
+    "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/RLFeedback.msg"
+    )
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/proyecto_final/cmake" TYPE FILE FILES "/home/laboratorio/ros_workspace/build/proyecto_final/catkin_generated/installspace/proyecto_final-msg-paths.cmake")
 endif()
 
@@ -204,7 +221,11 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final" REGEX "/\\_\\_init\\_\\_\\.py$" EXCLUDE REGEX "/\\_\\_init\\_\\_\\.pyc$" EXCLUDE)
+endif()
+
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final" FILES_MATCHING REGEX "/home/laboratorio/ros_workspace/devel/\\.private/proyecto_final/lib/python3/dist-packages/proyecto_final/.+/__init__.pyc?$")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
