@@ -88,21 +88,15 @@ class VisionTab:
         self.F_col_2.grid_rowconfigure(1, weight=1)
         self.F_col_2.grid_columnconfigure(0, weight=1)
 
-
-        
         self._primera_fila()
         self._fila_camaras()
         self._fila_ws()
         self._fila_3D()
         self._fila_2D()
 
-
-
-
-
         # Subpestaña: Detección de Cubos
-        self._update_images()
-        self.update_camera_feed_3()
+        self._update_3D_file_images()
+        self.update_camera_geometry_2D()
         self.toggle_mode()
 
 
@@ -341,7 +335,7 @@ class VisionTab:
             self.L_camON.config(font=("Montserrat", 10), foreground="#474B4E")
             self.stop_camera()
             self.file_inputs()
-            self._update_images()
+            self._update_3D_file_images()
 
     def camera_inputs(self):
         """Elimina los campos de entrada y botones para cargar imágenes"""
@@ -421,12 +415,13 @@ class VisionTab:
     
     def start_camera(self):
         self.camera_active = True
-        self.update_camera_feed_1()
-        self.update_camera_feed_2()
+        self.camera_feed_geometry_3D()
     
     def stop_camera(self):
         """Detiene el feed de la cámara."""
         self.camera_active = False
+        self.camera_feed_geometry_3D()
+        
 
     def _update_camera(self, camera_index, aspect_ratio:float=0.5):
         frame = self.camera_controller.get_frame(camera_index)
@@ -440,7 +435,7 @@ class VisionTab:
         
         return imgtk, frame
     
-    def update_camera_feed_1(self):
+    def camera_feed_geometry_3D(self):
         if self.camera_active:
             if self.state_procesar:
                 if self.camera_entry1.get() != '':
@@ -455,14 +450,7 @@ class VisionTab:
                 self.L_img_top.config(image=imgtk)
                 self.L_img_top.image = imgtk
                 self.L_img_top.update()
-
-            # Es como un hilo, se llama a sí misma después de 10ms
-            self.root.after(10, self.update_camera_feed_1)
-    
-    def update_camera_feed_2(self):
-        """Actualiza el feed de la cámara y lo muestra en el Label."""
-        if self.camera_active:
-            if self.state_procesar:
+                
                 if self.camera_entry2.get() != '':
                     index = self.camera_controller.camera_names.index(self.camera_entry2.get())
                     imgtk, frame = self._update_camera(index)
@@ -477,9 +465,10 @@ class VisionTab:
                 self.L_img_front.update()
 
             # Es como un hilo, se llama a sí misma después de 10ms
-            self.root.after(11, self.update_camera_feed_2)
+            self.root.after(10, self.camera_feed_geometry_3D)
+    
 
-    def update_camera_feed_3(self):
+    def update_camera_geometry_2D(self):
         """Actualiza el feed de la cámara y lo muestra en el Label."""
         if self.state_procesar_xy:
             if self.CB_cam_ws.get() != '':
@@ -495,7 +484,7 @@ class VisionTab:
             self.L_img_ws.image = imgtk
             self.L_img_ws.update()
             
-            self.camera_feed_job_3 = self.root.after(12, self.update_camera_feed_3)
+            self.camera_feed_job_3 = self.root.after(12, self.update_camera_geometry_2D)
         else:
             if self.camera_feed_job_3 is not None:
                 self.root.after_cancel(self.camera_feed_job_3)
@@ -548,7 +537,7 @@ class VisionTab:
             self.xy_process_button.state([ttk.DISABLED])
             self.xy_clear_button.state(["!disabled"])
             self.state_procesar_xy = False
-            self.update_camera_feed_3()
+            self.update_camera_geometry_2D()
             
 
             img_ws_processed, coordenadas = self.CubeLocalizator.process_image(self.img_ws, area_size=1000)
@@ -667,18 +656,15 @@ class VisionTab:
         self.state_procesar_xy = True
 
         # --- VACIAR MATRIZ ---
-        fig_2d = self.Geometry2D.draw_2d_space([], True)
-
-            # Actualizar canvas_3d
         if hasattr(self, "canvas_2d") and self.canvas_2d is not None:
-            # Eliminar canvas previo si existe
             self.canvas_2d.get_tk_widget().destroy()
 
-            # Crear y asignar nueva figura
-        self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.geometry_2d_frame)
+        fig_2d = self.Geometry2D.draw_2d_space([], True)
+
+        self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.LF_2d_fila)
         self.canvas_2d.get_tk_widget().pack(padx=0, pady=0)
         
-        self.update_camera_feed_3()
+        self.update_camera_geometry_2D()
 
     def update_cameras(self):
         self.camera_controller.stop()
@@ -687,13 +673,12 @@ class VisionTab:
             self.camera_entry1['values'] = self.camera_controller.camera_names
             self.camera_entry2['values'] = self.camera_controller.camera_names
             self.CB_cam_ws['values'] = self.camera_controller.camera_names
-        self.update_camera_feed_1()
-        self.update_camera_feed_2()
-        self.update_camera_feed_3()
+        self.camera_feed_geometry_3D()
+        self.update_camera_geometry_2D()
         
         
 # Función para actualizar las imágenes en la interfaz
-    def _update_images(self):
+    def _update_3D_file_images(self):
         img1 = self._create_image_with_text("CARGAR IMAGEN")
         img2 = self._create_image_with_text("CARGAR IMAGEN")
         
@@ -808,5 +793,4 @@ class VisionTab:
         exit()
             
 if __name__ == "__main__":
-
-    app = VisionTab()
+    VisionTab()
