@@ -23,15 +23,23 @@ from geometry2D import Geometry2D
 
 class VisionTab:
     def __init__(self,) -> None:
-        self.root = root
-        self.tab = tab
-        self.tab_active = tab_active
+        # --- ROOT ---
+        self.root = ttk.Window(title="Reconstrucción Cubos", themename="custom-vision")
+        self.root.resizable(True, True)  # Permitir redimensionar la ventana
+        self.root.attributes('-zoomed', True) 
+        self.root.attributes('-zoomed', True) 
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        self.root.geometry(f"{screen_width}x{screen_height}")
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
         
         # Definición de clases
         self.ImageProcessorFrontal = ImageProcessor_Front()
         self.ImageProcessorPlanta = ImageProcessor_Top()
         self.CubeLocalizator = CubeTracker("/home/laboratorio/ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
-        self.FigureGenerator = FigureGenerator()
+        self.Geometry3D = FigureGenerator()
         self.Geometry2D = Geometry2D()
         self.camera_controller = CameraController(10)
         
@@ -39,129 +47,57 @@ class VisionTab:
         self.img_front = None
         self.img_plant = None
         self.img_mesa_trabajo = None
+
+        # Definición de Objetos ttk
         self.camera_entry1 = None
         self.camera_entry2 = None
+        self.F_input_1 = None
+        self.F_input_2 = None
+
         #Definicion geometria
-        self.plant_matrix = np.full((5,5), -1)
-        self.side_matrix = np.full((5,5), -1)
         self.width = 320
-        self.aruco_pose = [0,0]
         self.cube_data = []
         
         #Definicion estados del boton
         self.state_procesar = True
         self.state_procesar_xy = True
         
+        
+        self.estilo()
         self.vision_tab()
+        self.root.mainloop()
+    
     
     def vision_tab(self):
-        # Crear un Frame para organizar los elementos dentro de la pestaña "Procesado de Figura"
-        self.frame_vision = ttk.Frame(self.tab, borderwidth=0)
-        self.frame_vision.pack(fill="both", expand=True)
-
-        #Configuración grid
-        self.frame_vision.grid_columnconfigure(0, weight=2)
+        self.frame_vision = ttk.Frame(self.root)
+        self.frame_vision.grid(row=0, column=0, pady=10, padx=10, sticky="nsew")
+        self.frame_vision.grid_rowconfigure(0, weight=1)
+        self.frame_vision.grid_columnconfigure(0, weight=1)
         self.frame_vision.grid_columnconfigure(1, weight=1)
-        self.frame_vision.grid_columnconfigure(2, weight=4)
-        
-        self.primera_fila()
 
-        # --- IMAGE LABEL FRAME ---
-        self.label_frame = ttk.LabelFrame(self.frame_vision, text="Imágenes")
-        self.label_frame.grid(row=1, column=0, padx=[10,90], pady=10,  sticky="nsew")
+        self.F_col_1 = ttk.Frame(self.frame_vision)
+        self.F_col_1.grid(row=0, column=0, sticky="nsew")
+        self.F_col_1.grid_rowconfigure(0, weight=1)
+        self.F_col_1.grid_rowconfigure(1, weight=2)
+        self.F_col_1.grid_rowconfigure(2, weight=2)
+        self.F_col_1.grid_columnconfigure(0, weight=1)
 
-        self.image1_frame = ttk.Frame(self.label_frame)
-        self.image1_frame.grid_columnconfigure(0, weight=1)
-        self.image1_frame.grid_columnconfigure(1, weight=1)
-        self.image1_frame.grid_columnconfigure(2, weight=1)
-        self.image1_frame.grid(row=1, column=0, columnspan=3, padx=10, pady=10, sticky="NW")
-        titulo = ttk.Label(self.image1_frame,text="Cámara Superior", font=("Montserrat SemiBold", 10))
-        titulo.grid(row=0, column=0, columnspan=3, pady=[0,5],sticky="N")
-        self.lbl_vision_figure1 = ttk.Label(self.image1_frame)
-        self.lbl_vision_figure1.grid(row=1, column=0, columnspan=3)
+        self.F_col_2 = ttk.Frame(self.frame_vision)
+        self.F_col_2.grid(row=0, column=1, sticky="nsew")
+        self.F_col_2.grid_rowconfigure(0, weight=1)
+        self.F_col_2.grid_rowconfigure(1, weight=1)
+        self.F_col_2.grid_columnconfigure(0, weight=1)
 
-        self.image2_frame = ttk.Frame(self.label_frame)
-        self.image2_frame.grid_columnconfigure(0, weight=1)
-        self.image2_frame.grid_columnconfigure(1, weight=1)
-        self.image2_frame.grid_columnconfigure(2, weight=1)
-        self.image2_frame.grid(row=1, column=3, columnspan=3, padx=10, pady=10, sticky="NW")
-        titulo = ttk.Label(self.image2_frame,text="Cámara Lateral", font=("Montserrat SemiBold", 10))
-        titulo.grid(row=0, column=0, columnspan=3, pady=[0,5],sticky="N")
-        self.lbl_vision_figure2 = ttk.Label(self.image2_frame)
-        self.lbl_vision_figure2.grid(row=1, column=0, columnspan=3)
-
-        self.process_button = ttk.Button(
-            self.label_frame,
-            text="Procesar",
-            command=self.process_images,  # Función para procesar las imágenes
-            bootstyle="info",  # Estilo del botón
-        )
-        self.process_button.grid(row=3, column=0, columnspan=3, padx=10, pady=10, sticky="nsew")
-
-        self.clear_button = ttk.Button(
-            self.label_frame,
-            text="Borrar",
-            state = ttk.DISABLED,
-            command=self.clear_images,  # Función para procesar las imágenes
-            bootstyle="warning",  # Estilo del botón
-        )
-        self.clear_button.grid(row=3, column=3, columnspan=3, padx=10, pady=10, sticky="nsew")
-
-
-        # --- GEOMETRY LABEL FRAME ---
-        self.geometry_frame = ttk.LabelFrame(self.frame_vision, text="Geometría")
-        self.geometry_frame.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
-
-        fig_3d = self.FigureGenerator.generate_figure_from_matrix(self.plant_matrix, self.side_matrix, True)
-
-        # Mostrar la figura 3D en el canvas
-        self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.geometry_frame)
-        self.canvas_3d.get_tk_widget().pack(padx=0, pady=0)
-
-
-        # --- MESA DE TRABAJO ---
-        self.label_frame_2 = ttk.LabelFrame(self.frame_vision, text="Mesa de Trabajo")
-        self.label_frame_2.grid(row=2, column=0, padx=[10,90], pady=10,  sticky="nsew")
-        
-        
-
-        self.lbl_vision_figure3 = ttk.Label(self.label_frame_2)
-        self.lbl_vision_figure3.grid(row=0, rowspan=10, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
-        
-        self.camera_entry3 = ttk.Combobox(self.label_frame_2,values=self.camera_controller.camera_names,  font=("Montserrat", 10))
-        self.camera_entry3.grid(row=0, column=5, columnspan=2, padx=[10,0], pady=10, sticky="nsew")
-        
-        if len(self.camera_controller.cameras) > 0:
-            self.camera_entry3.set(self.camera_controller.camera_names[0])
-
-        self.xy_process_button = ttk.Button(
-            self.label_frame_2,
-            text="Procesar",
-            command=self.xy_process_images,  # Función para procesar las imágenes
-            bootstyle="info",  # Estilo del botón
-        )
-        self.xy_process_button.grid(row=8, column=5, columnspan=2, padx=[10,0], pady=10, sticky="nsew")
-        
-        self.xy_clear_button = ttk.Button(
-            self.label_frame_2,
-            text="Borrar",
-            state = ttk.DISABLED,
-            command=self.xy_clear_images,  # Función para procesar las imágenes
-            bootstyle="warning",  # Estilo del botón
-        )
-        self.xy_clear_button.grid(row=9, column=5, columnspan=2, padx=[10,0], pady=10, sticky="nsew")
-
-
-        # --- GEOMETRY LABEL FRAME ---
-        self.geometry_2d_frame = ttk.LabelFrame(self.frame_vision, text="Espacio")
-        self.geometry_2d_frame.grid(row=2, column=2, padx=10, pady=10, sticky="nsew")
 
         
-        fig_2d = self.Geometry2D.draw_2d_space([], True)
+        self._primera_fila()
+        self._fila_camaras()
+        self._fila_ws()
+        self._fila_3D()
+        self._fila_2D()
 
-        # Mostrar la figura 3D en el canvas
-        self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.geometry_2d_frame)
-        self.canvas_2d.get_tk_widget().pack(padx=0, pady=0)
+
+
 
 
         # Subpestaña: Detección de Cubos
@@ -170,26 +106,221 @@ class VisionTab:
         self.toggle_mode()
 
 
-    def primera_fila(self):
-         
-        self.camera_check_var = ttk.IntVar()  # Variable para el estado del Checkbutton
-        self.camera_check = ttk.Checkbutton(
-            self.frame_vision,
-            text="Usar Cámara",
-            variable=self.camera_check_var,
-            
-            command=self.toggle_mode,  # Función para manejar el cambio
-        )
-        self.camera_check.grid(row=0, column=0, sticky="w", padx=10, pady=10)
+    def _primera_fila(self):
+
+        # --- FRAME: Primera fila ---
+        self.F_primera_fila = ttk.Frame(self.F_col_1)
+        self.F_primera_fila.grid(row=0, column=0, sticky="nsew",padx=10, pady=5)
+        self.F_primera_fila.grid_rowconfigure(0, weight=1)
+        self.F_primera_fila.grid_columnconfigure(0, weight=1)
+        self.F_primera_fila.grid_columnconfigure(1, weight=1)
+
+        self.LF_primera_col = ttk.LabelFrame(self.F_primera_fila, text="  Modo Funcionamiento  ")
+        self.LF_primera_col.grid(row=0, column=0, sticky="nsew", padx=[0,10], pady=0)
+        self.LF_primera_col.grid_rowconfigure(0, weight=1)
+        self.LF_primera_col.grid_columnconfigure(0, weight=1)
+
+
+        self.F_primera_col = ttk.Frame(self.LF_primera_col)
+        self.F_primera_col.grid(row=0, column=0, sticky="nsew",padx=10, pady=10)
+        self.F_primera_col.grid_rowconfigure(0, weight=1)
+        self.F_primera_col.grid_columnconfigure(0, weight=2)
+        self.F_primera_col.grid_columnconfigure(1, weight=1)
+        self.F_primera_col.grid_columnconfigure(2, weight=2)
+
+        # --- ELEMENTS ---
+        # Text MANUAL
+        self.L_camOFF = ttk.Label(self.F_primera_col, text="CAMARA OFF" )
+        self.L_camOFF.grid(row=0, column=0, sticky="e", padx=[0, 10])
+
+            # Checkbutton
+        self.V_modo = ttk.IntVar()  # Variable para el estado del Checkbutton
+        self.CB_modo = ttk.Checkbutton(
+            self.F_primera_col,
+            variable=self.V_modo,
+            command=self.toggle_mode,
+            bootstyle="primary-round-toggle")
+        self.CB_modo.grid(row=0, column=1)
+
+        # Text MANUAL
+        self.L_camON = ttk.Label(self.F_primera_col, text="CAMARA ON" )
+        self.L_camON.grid(row=0, column=2, sticky="w", padx=[10, 0])
+
+        # --- SEGUNDA COLUMNA ---
+        self.LF_segunda_col = ttk.LabelFrame(self.F_primera_fila, text="  Control de las Cámaras  ")
+        self.LF_segunda_col.grid(row=0, column=1, sticky="nsew", padx=[10,0], pady=0)
+        self.LF_segunda_col.grid_rowconfigure(0, weight=1)
+        self.LF_segunda_col.grid_columnconfigure(0, weight=1)
+
+
+        self.F_segunda_col= ttk.Frame(self.LF_segunda_col)
+        self.F_segunda_col.grid(row=0, column=0, sticky="nsew",padx=0, pady=0)
+        self.F_segunda_col.grid_rowconfigure(0, weight=1)
+        self.F_segunda_col.grid_columnconfigure(0, weight=1)
         
-        self.update_camera_button = ttk.Button(
-            self.frame_vision,
-            text="ACTUALIZAR CÁMARAS",
-            command=self.update_cameras,  # Función para procesar las imágenes
-            bootstyle="warning",  # Estilo del botón
-            padding = [20,5]
+        self.B_ActualizarCam = ttk.Button(self.F_segunda_col, 
+                                 text="ACTUALIZAR CAMARAS",
+                                 bootstyle="warning",
+                                 command=self.update_cameras)
+        self.B_ActualizarCam.grid(row=0, column=0, sticky="nsew",padx=10, pady=10)
+         
+
+    def _fila_camaras(self):
+        # --- FRAME ---
+        # Label Frame
+        self.LF_segunda_fila = ttk.LabelFrame(self.F_col_1, text="  Visualización Cámaras  ")
+        self.LF_segunda_fila.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
+        self.LF_segunda_fila.grid_rowconfigure(0, weight=1)
+        self.LF_segunda_fila.grid_columnconfigure(0, weight=1)
+
+        # Inner Frame
+        self.F_segunda_fila = ttk.Frame(self.LF_segunda_fila)
+        self.F_segunda_fila.grid(row=0, column=0, sticky="nsew",padx=10, pady=10)
+        self.F_segunda_fila.grid_rowconfigure(0, weight=1)
+        self.F_segunda_fila.grid_columnconfigure(0, weight=1)
+        self.F_segunda_fila.grid_columnconfigure(1, weight=1)
+
+        # --- ELEMENTS ---
+        # Image Frame 1
+        self.F_image_1 = ttk.Frame(self.F_segunda_fila)
+        self.F_image_1.grid_rowconfigure(0, weight=1)
+        self.F_image_1.grid_rowconfigure(1, weight=1)
+        self.F_image_1.grid_rowconfigure(2, weight=1)
+        self.F_image_1.grid_columnconfigure(0, weight=1)
+        self.F_image_1.grid(row=0, column=0, sticky="nsew")
+
+        ttk.Label(self.F_image_1,text="CÁMARA SUPERIOR", 
+                  font=("Montserrat SemiBold", 10), 
+                  foreground="#000000").grid(row=0, column=0, pady=[0,5],sticky="N")
+        
+        self.L_img_top = ttk.Label(self.F_image_1)
+        self.L_img_top.grid(row=1, column=0, sticky="N")
+
+
+        # Image Frame 2
+        self.F_image_2 = ttk.Frame(self.F_segunda_fila)
+        self.F_image_2.grid_rowconfigure(0, weight=1)
+        self.F_image_2.grid_rowconfigure(1, weight=1)
+        self.F_image_2.grid_rowconfigure(2, weight=1)
+        self.F_image_2.grid_columnconfigure(0, weight=1)
+        self.F_image_2.grid(row=0, column=1, sticky="nsew")
+
+        ttk.Label(self.F_image_2,text="CÁMARA LATERAL", 
+                  font=("Montserrat SemiBold", 10),
+                  foreground="#000000").grid(row=0, column=0, pady=[0,5],sticky="N")
+        
+        
+        self.L_img_front = ttk.Label(self.F_image_2)
+        self.L_img_front.grid(row=1, column=0, sticky="N")
+
+    
+        self.process_button = ttk.Button(
+            self.F_segunda_fila,
+            text="PROCESAR",
+            command=self.process_images,  # Función para procesar las imágenes
+            bootstyle="secondary",  # Estilo del botón
         )
-        self.update_camera_button.grid(row=0, column=0, columnspan=2, padx=[200,0], pady=10, sticky="nw")
+        self.process_button.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+
+        self.clear_button = ttk.Button(
+            self.F_segunda_fila,
+            text="BORRAR",
+            state = ttk.DISABLED,
+            command=self.clear_images,  # Función para procesar las imágenes
+            bootstyle="danger-outline",  # Estilo del botón
+        )
+        self.clear_button.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
+
+    def _fila_ws(self):
+        # --- FRAME ---
+        # Label Frame
+        self.LF_tercera_fila = ttk.LabelFrame(self.F_col_1, text="  Mesa de Trabajo  ")
+        self.LF_tercera_fila.grid(row=2, column=0, sticky="nsew", padx=10, pady=5)
+        self.LF_tercera_fila.grid_rowconfigure(0, weight=1)
+        self.LF_tercera_fila.grid_columnconfigure(0, weight=1)
+
+        # Inner Frame
+        self.F_tercera_fila = ttk.Frame(self.LF_tercera_fila)
+        self.F_tercera_fila.grid(row=0, column=0, sticky="nsew",padx=10, pady=10)
+        self.F_tercera_fila.grid_rowconfigure(0, weight=1)
+        self.F_tercera_fila.grid_columnconfigure(0, weight=1)
+        self.F_tercera_fila.grid_columnconfigure(1, weight=3)
+
+        self._col_ws_1()
+        self._col_ws_2()
+
+
+    def _col_ws_1(self):
+        self.F_ws_col_1 = ttk.Frame(self.F_tercera_fila)
+        self.F_ws_col_1.grid(row=0, column=0, sticky="nsew")
+        self.F_ws_col_1.grid_rowconfigure(0, weight=1)
+        self.F_ws_col_1.grid_columnconfigure(0, weight=1)
+
+        self.L_img_ws = ttk.Label(self.F_ws_col_1)
+        self.L_img_ws.grid(row=0, column=0)
+    
+    def _col_ws_2(self):
+        # --- FRAME ---
+        self.F_ws_col_2 = ttk.Frame(self.F_tercera_fila)
+        self.F_ws_col_2.grid(row=0, column=1, sticky="nsew")
+        self.F_ws_col_2.grid_rowconfigure(0, weight=1)
+        self.F_ws_col_2.grid_rowconfigure(1, weight=1)
+        self.F_ws_col_2.grid_rowconfigure(2, weight=1)
+        self.F_ws_col_2.grid_columnconfigure(0, weight=1)
+        
+        self.CB_cam_ws = ttk.Combobox(self.F_ws_col_2, 
+                                          values=self.camera_controller.camera_names,
+                                          font=("Montserrat", 10))
+        self.CB_cam_ws.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        
+        if len(self.camera_controller.cameras) > 0:
+            self.CB_cam_ws.set(self.camera_controller.camera_names[0])
+
+        self.xy_process_button = ttk.Button(
+            self.F_ws_col_2,
+            text="PROCESAR",
+            command=self.xy_process_images,   # Función para procesar las imágenes
+            bootstyle="secondary",
+        )
+        self.xy_process_button.grid(row=1, column=0, sticky="nsew", padx=10, pady=10,)
+        
+        self.xy_clear_button = ttk.Button(
+            self.F_ws_col_2,
+            text="Borrar",
+            state = ttk.DISABLED,
+            command=self.xy_clear_images,  # Función para procesar las imágenes
+            bootstyle="warning", 
+        )
+        self.xy_clear_button.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+
+
+    def _fila_3D(self):
+        # --- FRAME ---
+        # Label Frame
+        self.LF_3d_fila = ttk.LabelFrame(self.F_col_2, text="  Representación 3D de Figura  ")
+        self.LF_3d_fila.grid(row=0, column=0, sticky="nsew", padx=10, pady=5)
+        self.LF_3d_fila.grid_rowconfigure(0, weight=1)
+        self.LF_3d_fila.grid_columnconfigure(0, weight=1)
+
+        # --- ELEMENTS ---
+        fig_3d = self.Geometry3D.generate_figure_from_matrix(np.full((5,5),-1), 
+                                                             np.full((5,5),-1), 
+                                                             tkinter=True)
+        self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
+        self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
+
+    def _fila_2D(self):
+        # --- FRAME ---
+        # Label Frame
+        self.LF_2d_fila = ttk.LabelFrame(self.F_col_2, text="  Representación 3D de Figura  ")
+        self.LF_2d_fila.grid(row=1, column=0, sticky="nsew", padx=10, pady=5)
+        self.LF_2d_fila.grid_rowconfigure(0, weight=1)
+        self.LF_2d_fila.grid_columnconfigure(0, weight=1)
+
+        # --- ELEMENTS ---
+        fig_2d = self.Geometry2D.draw_2d_space([], True)
+        self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.LF_2d_fila)
+        self.canvas_2d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
 
     def toggle_mode(self):
         """Maneja el cambio de estado del Checkbutton"""
@@ -198,29 +329,94 @@ class VisionTab:
             if int(widget.grid_info()["row"]) > 2:
                 widget.destroy()
 
-        if self.camera_check_var.get() == 1:
-            self.remove_file_inputs()
+        if self.V_modo.get() == 1:
+            self.L_camOFF.config(font=("Montserrat", 10), foreground="#474B4E")
+            self.L_camON.config(font=("Montserrat", 10, "bold"), foreground="#5eaae8")
+            self.camera_inputs()
             self.start_camera()
 
         else:
-            self.create_file_inputs()
+            self.L_camOFF.config(font=("Montserrat", 10, "bold"), foreground="#5eaae8")
+            self.L_camON.config(font=("Montserrat", 10), foreground="#474B4E")
             self.stop_camera()
+            self.file_inputs()
+            self._update_images()
 
-    def remove_file_inputs(self):
+    def camera_inputs(self):
         """Elimina los campos de entrada y botones para cargar imágenes"""
-        for widget in [self.file_entry1, self.browse_button1, self.file_entry2, self.browse_button2]:
-            widget.grid_forget()
-            
-        self.camera_entry1 = ttk.Combobox(self.image1_frame,values=self.camera_controller.camera_names,  font=("Montserrat", 10))
-        self.camera_entry1.grid(row=2, column=0, columnspan=4, pady=10, sticky="nsew")
+        if self.F_input_1 is not None:
+            self.F_input_1.destroy()
+        if self.F_input_2 is not None:
+            self.F_input_2.destroy()
+        
+        self.F_input_1 = ttk.Frame(self.F_image_1, width=320)
+        self.F_input_1.grid_columnconfigure(0, weight=1)
+        self.F_input_1.grid_rowconfigure(0, weight=1)
+        self.F_input_1.grid(row=2, column=0)
+        self.camera_entry1 = ttk.Combobox(self.F_input_1,
+                                          values=self.camera_controller.camera_names,
+                                          font=("Montserrat", 10),
+                                          width=33)
+        self.camera_entry1.grid(row=0, column=0, padx=0, pady=0,sticky="nsew")
         if len(self.camera_controller.cameras) > 0:
             self.camera_entry1.set(self.camera_controller.camera_names[0])
-            
-        self.camera_entry2 = ttk.Combobox(self.image2_frame,values=self.camera_controller.camera_names,  font=("Montserrat", 10))
-        self.camera_entry2.grid(row=2, column=0, columnspan=4, pady=10, sticky="nsew")
+        
+        self.F_input_2 = ttk.Frame(self.F_image_2, width=320)
+        self.F_input_2.grid_columnconfigure(0, weight=1)
+        self.F_input_2.grid_rowconfigure(0, weight=1)
+        self.F_input_2.grid(row=2, column=0)
+        self.camera_entry2 = ttk.Combobox(self.F_input_2,
+                                          values=self.camera_controller.camera_names,
+                                          font=("Montserrat", 10),
+                                          width=33)
+        self.camera_entry2.grid(row=0, column=0)
         if len(self.camera_controller.cameras) > 1:
             self.camera_entry2.set(self.camera_controller.camera_names[1])
         
+    def file_inputs(self):
+        """Crea los campos de entrada y botones para cargar imágenes"""
+        if self.F_input_1 is not None:
+            self.F_input_1.destroy()
+        if self.F_input_2 is not None:
+            self.F_input_2.destroy()
+        
+        self.F_input_1 = ttk.Frame(self.F_image_1, width=320)
+        self.F_input_1.grid_columnconfigure(0, weight=1)
+        self.F_input_1.grid_columnconfigure(1, weight=1)
+        self.F_input_1.grid_rowconfigure(0, weight=1)
+        self.F_input_1.grid(row=2, column=0)
+
+        self.E_input_1 = ttk.Entry(self.F_input_1, width=25, font=("Montserrat", 10), bootstyle="dark")
+        self.E_input_1.grid(row=0, column=0, padx=[0,10], sticky="nsew")
+        self.E_input_1.delete(0, END)
+        self.E_input_1.configure(foreground="#5a5a5a")
+        self.E_input_1.state([ttk.DISABLED])
+
+        self.B_browse_1 = ttk.Button(
+            self.F_input_1,
+            text="Buscar...",
+            command=lambda: self.load_save_frame("img_plant", self.E_input_1, self.L_img_top),
+        )
+        self.B_browse_1.grid(row=0, column=1, sticky="nsew")
+
+        self.F_input_2 = ttk.Frame(self.F_image_2, width=320)
+        self.F_input_2.grid_columnconfigure(0, weight=1)
+        self.F_input_2.grid_columnconfigure(1, weight=1)
+        self.F_input_2.grid_rowconfigure(0, weight=1)
+        self.F_input_2.grid(row=2, column=0)
+
+        self.E_input_2 = ttk.Entry(self.F_input_2, width=25, font=("Montserrat", 10), bootstyle="dark")
+        self.E_input_2.grid(row=0, column=0, padx=[0,10], sticky="nsew")
+        self.E_input_2.delete(0, END)
+        self.E_input_2.state([ttk.DISABLED])
+        self.E_input_2.configure(foreground="#5a5a5a")
+
+        self.B_browse_2 = ttk.Button(
+            self.F_input_2,
+            text="Buscar...",
+            command=lambda: self.load_save_frame("img_front", self.E_input_2, self.L_img_front),
+        )
+        self.B_browse_2.grid(row=0, column=1, sticky="nsew")
     
     def start_camera(self):
         self.camera_active = True
@@ -231,76 +427,72 @@ class VisionTab:
         """Detiene el feed de la cámara."""
         self.camera_active = False
 
-    def _update_camera(self, camera_index, size:list=(320, 240)):
+    def _update_camera(self, camera_index, aspect_ratio:float=0.5):
         frame = self.camera_controller.get_frame(camera_index)
 
         if frame is not None:
             img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
-            # Redimensionar la imagen
-            aspect_ratio = img.height / img.width
-            height = int(size[0] * aspect_ratio)
-            img = img.resize((size[0], height), Image.Resampling.LANCZOS)
+            img = img.resize((img.height*aspect_ratio, img.height*aspect_ratio), Image.Resampling.LANCZOS)
             imgtk = ImageTk.PhotoImage(image=img)
         else:
-            imgtk = self._create_image_with_text("Cámara NO encontrada", size)
+            imgtk = self._create_image_with_text("Cámara NO encontrada", aspect_ratio)
         
         return imgtk, frame
     
     def update_camera_feed_1(self):
-        if self.state_procesar:
-            if self.camera_active and self.camera_entry1.get() != '':
-                index = self.camera_controller.camera_names.index(self.camera_entry1.get())
-                imgtk, frame = self._update_camera(index)
+        if self.camera_active:
+            if self.state_procesar:
+                if self.camera_entry1.get() != '':
+                    index = self.camera_controller.camera_names.index(self.camera_entry1.get())
+                    imgtk, frame = self._update_camera(index)
 
-            else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada")
-                frame = None
+                else:
+                    imgtk = self._create_image_with_text("Cámara NO encontrada")
+                    frame = None
 
-            self.img_plant = frame
-            self.lbl_vision_figure1.config(image=imgtk)
-            self.lbl_vision_figure1.image = imgtk
-            self.lbl_vision_figure1.update()
+                self.img_plant = frame
+                self.L_img_top.config(image=imgtk)
+                self.L_img_top.image = imgtk
+                self.L_img_top.update()
 
-        # Es como un hilo, se llama a sí misma después de 10ms
-        self.root.after(10, self.update_camera_feed_1)
-
-    
+            # Es como un hilo, se llama a sí misma después de 10ms
+            self.root.after(10, self.update_camera_feed_1)
     
     def update_camera_feed_2(self):
         """Actualiza el feed de la cámara y lo muestra en el Label."""
-        if self.state_procesar:
-            if self.camera_active and self.camera_entry2.get() != '':
-                index = self.camera_controller.camera_names.index(self.camera_entry2.get())
-                imgtk, frame = self._update_camera(index)
+        if self.camera_active:
+            if self.state_procesar:
+                if self.camera_entry2.get() != '':
+                    index = self.camera_controller.camera_names.index(self.camera_entry2.get())
+                    imgtk, frame = self._update_camera(index)
 
-            else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada")
-                frame = None
+                else:
+                    imgtk = self._create_image_with_text("Cámara NO encontrada")
+                    frame = None
 
-            self.img_front = frame
-            self.lbl_vision_figure2.config(image=imgtk)
-            self.lbl_vision_figure2.image = imgtk
-            self.lbl_vision_figure2.update()
+                self.img_front = frame
+                self.L_img_front.config(image=imgtk)
+                self.L_img_front.image = imgtk
+                self.L_img_front.update()
 
-        # Es como un hilo, se llama a sí misma después de 10ms
-        self.root.after(11, self.update_camera_feed_2)
+            # Es como un hilo, se llama a sí misma después de 10ms
+            self.root.after(11, self.update_camera_feed_2)
 
     def update_camera_feed_3(self):
         """Actualiza el feed de la cámara y lo muestra en el Label."""
         if self.state_procesar_xy:
-            if self.camera_entry3.get() != '':
-                index = self.camera_controller.camera_names.index(self.camera_entry3.get())
-                imgtk, frame = self._update_camera(index, (480, 360))
+            if self.CB_cam_ws.get() != '':
+                index = self.camera_controller.camera_names.index(self.CB_cam_ws.get())
+                imgtk, frame = self._update_camera(index, (512, 360))
 
             else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada",(480, 360))
+                imgtk = self._create_image_with_text("Cámara NO encontrada", 0.8)
                 frame = None
 
             self.img_ws = frame
-            self.lbl_vision_figure3.config(image=imgtk)
-            self.lbl_vision_figure3.image = imgtk
-            self.lbl_vision_figure3.update()
+            self.L_img_ws.config(image=imgtk)
+            self.L_img_ws.image = imgtk
+            self.L_img_ws.update()
             
             self.camera_feed_job_3 = self.root.after(12, self.update_camera_feed_3)
         else:
@@ -308,48 +500,26 @@ class VisionTab:
                 self.root.after_cancel(self.camera_feed_job_3)
                 self.camera_feed_job_3 = None
             
-    def create_file_inputs(self):
-        """Crea los campos de entrada y botones para cargar imágenes"""
-        if self.camera_entry1 and self.camera_entry2:
-            for widget in [self.camera_entry1, self.camera_entry2]:
-                widget.grid_forget()
-        # Campo y botón para la primera imagen
-        self.file_entry1 = ttk.Entry(self.image1_frame, width=25, font=("Montserrat", 10))
-        self.file_entry1.grid(row=2, column=0, columnspan=2, pady=10, sticky="WN")
+    def load_save_frame(self, img_name, entry:ttk.Entry, label):
+        loaded_image = self._load_file(entry, label)
+        setattr(self, img_name, loaded_image) 
 
-        self.browse_button1 = ttk.Button(
-            self.image1_frame,
-            text="Buscar...",
-            command=lambda: self.load_save_frame_1(self.file_entry1, self.lbl_vision_figure1),
-        )
-        self.browse_button1.grid(row=2, column=2, padx=0, pady=10, sticky="EN")
-
-        # Campo y botón para la segunda imagen
-        self.file_entry2 = ttk.Entry(self.image2_frame, width=25, font=("Montserrat", 10))
-        self.file_entry2.grid(row=2, column=0, columnspan=2, pady=10, sticky="WN")
-
-        self.browse_button2 = ttk.Button(
-            self.image2_frame,
-            text="Buscar...",
-            command=lambda: self.load_save_frame_2(self.file_entry2, self.lbl_vision_figure2),
-        )
-        self.browse_button2.grid(row=2, column=2, padx=0, pady=10, sticky="EN")
-
-    def load_save_frame_1(self, entry, label):
-        self.img_plant = self._load_file(entry, label)
-    
-    def load_save_frame_2(self, entry, label):
-        self.img_front = self._load_file(entry, label)
-
-    def _load_file(self, entry, label):
+    def _load_file(self, entry:ttk.Entry, label:ttk.Label):
         """Permite seleccionar un archivo y actualizar la imagen correspondiente"""
         file_path = filedialog.askopenfilename(
-            filetypes=[("Imagenes", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")]
-        )
+            initialdir="/home/laboratorio/ros_workspace/src/proyecto_final/data/example_img",
+            filetypes=[("Imagenes", "*.png *.jpg *.jpeg *.bmp *.gif"),
+                       ("Todos los archivos", "*.*")])
         if file_path:
             try:
+                directorio_padre = os.path.dirname(file_path)
+                nombre_archivo = os.path.basename(file_path)
+                ultimo_directorio = os.path.basename(directorio_padre)
+
+                entry.state(["!disabled"])
                 entry.delete(0, END)
-                entry.insert(0, file_path)
+                entry.insert(0, f".../{ultimo_directorio}/{nombre_archivo}")
+                entry.state([ttk.DISABLED])
 
                 # Actualizar la imagen
                 frame = cv2.imread(file_path)
@@ -370,9 +540,8 @@ class VisionTab:
         
             return frame
         
-        return self._create_image_with_text("CARGAR IMAGEN", (480, 360))
+        return self._create_image_with_text("CARGAR IMAGEN", 0.8)
 
-    
     def xy_process_images(self):
         if self.img_ws is not None:
             self.xy_process_button.state([ttk.DISABLED])
@@ -386,24 +555,19 @@ class VisionTab:
 
             #Resize
             img_ws_processed = Image.fromarray(cv2.cvtColor(img_ws_processed, cv2.COLOR_BGR2RGB))
-            photo1 = self._resize_image(img_ws_processed, 480)
+            photo1 = self._resize_image(img_ws_processed, 0.8)
 
             photo1 = ImageTk.PhotoImage(photo1)
-            self.lbl_vision_figure3.config(image=photo1)
-            self.lbl_vision_figure3.image = photo1
-
-
-
-            fig_2d = self.Geometry2D.draw_2d_space(coordenadas, True)
+            self.L_img_ws.config(image=photo1)
+            self.L_img_ws.image = photo1
 
             # Actualizar canvas_3d
-            if hasattr(self, "canvas_2d") and self.canvas_2d is not None:
-                # Eliminar canvas previo si existe
+            if hasattr(self, "canvas_2d"):
                 self.canvas_2d.get_tk_widget().destroy()
 
-            # Crear y asignar nueva figura
-            self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.geometry_2d_frame)
-            self.canvas_2d.get_tk_widget().pack(padx=0, pady=0)
+            fig_2d = self.Geometry2D.draw_2d_space([], True)
+            self.canvas_2d = FigureCanvasTkAgg(fig_2d, self.LF_2d_fila)
+            self.canvas_2d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
     
     def _expand_corners(self, corners, factor=1.2):
         """
@@ -443,58 +607,55 @@ class VisionTab:
         if self.img_front is not None and self.img_plant is not None:
             self.process_button.state([ttk.DISABLED])
             self.clear_button.state(["!disabled"])
+
             self.state_procesar = False
 
-            front_matrix, img_procesed_front = self.ImageProcessorFrontal.process_image(self.img_front, area_size=800)
-            plant_matrix, img_procesed_plant = self.ImageProcessorPlanta.process_image(self.img_plant, area_size=800)
+            front_matrix, img_procesed_front = self.ImageProcessorFrontal.process_image(self.img_front)
+            plant_matrix, img_procesed_plant = self.ImageProcessorPlanta.process_image(self.img_plant)
 
             #Resize
             img_procesed_front = Image.fromarray(cv2.cvtColor(img_procesed_front, cv2.COLOR_BGR2RGB))
             img_procesed_plant = Image.fromarray(cv2.cvtColor(img_procesed_plant, cv2.COLOR_BGR2RGB))
-            photo1 = self._resize_image(img_procesed_plant, self.width)
-            photo2 = self._resize_image(img_procesed_front, self.width)
+            photo1 = self._resize_image(img_procesed_plant)
+            photo2 = self._resize_image(img_procesed_front)
 
             photo1 = ImageTk.PhotoImage(photo1)
-            self.lbl_vision_figure1.config(image=photo1)
-            self.lbl_vision_figure1.image = photo1
+            self.L_img_top.config(image=photo1)
+            self.L_img_top.image = photo1
 
             photo2 = ImageTk.PhotoImage(photo2)
-            self.lbl_vision_figure2.config(image=photo2)
-            self.lbl_vision_figure2.image = photo2
+            self.L_img_front.config(image=photo2)
+            self.L_img_front.image = photo2
 
-            fig_3d = self.FigureGenerator.generate_figure_from_matrix(plant_matrix, front_matrix, True)
 
-             # Actualizar canvas_3d
-            if hasattr(self, "canvas_3d") and self.canvas_3d is not None:
-                # Eliminar canvas previo si existe
+            if hasattr(self, "canvas_3d"):
                 self.canvas_3d.get_tk_widget().destroy()
 
-            # Crear y asignar nueva figura
-            self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.geometry_frame)
-            self.canvas_3d.get_tk_widget().pack(padx=0, pady=0)
+            fig_3d = self.Geometry3D.generate_figure_from_matrix(plant_matrix, front_matrix, tkinter=True)
+            self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
+            self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
 
-    def _resize_image(self, img, width):
-        aspect_ratio = img.height / img.width
-        height = int(width * aspect_ratio)
-        return img.resize((width, height))    
+    def _resize_image(self, img:Image.Image, aspect_ratio:float=0.5):
+        img_size = (int(img.width * aspect_ratio), int(img.height * aspect_ratio))
+        return img.resize(img_size)    
     
     def clear_images(self):
         self.clear_button.state([ttk.DISABLED])
         self.process_button.state(["!disabled"])
+        self.B_browse_1.state(["!disabled"])
+        self.B_browse_2.state(["!disabled"])
         self.state_procesar = True
 
         # --- VACIAR MATRIZ ---
-        fig_3d = self.FigureGenerator.generate_figure_from_matrix(self.plant_matrix, self.side_matrix, True)
+        if hasattr(self, "canvas_3d"):
+            self.canvas_3d.get_tk_widget().destroy()
 
-        if hasattr(self, "canvas_3d") and self.canvas_3d is not None:
-                # Eliminar canvas previo si existe
-                self.canvas_3d.get_tk_widget().destroy()
-
-            # Crear y asignar nueva figura
-        self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.geometry_frame)
-        self.canvas_3d.get_tk_widget().pack(padx=0, pady=0)
-
-        #self._update_images()
+        fig_3d = self.Geometry3D.generate_figure_from_matrix(np.full((5,5),-1), 
+                                                             np.full((5,5),-1), 
+                                                             tkinter=True)
+        self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
+        self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
+            
         self.toggle_mode()
     
     def xy_clear_images(self):
@@ -519,12 +680,10 @@ class VisionTab:
     def update_cameras(self):
         self.camera_controller.stop()
         self.camera_controller.start(10)
-        self.camera_entry1['values'] = self.camera_controller.camera_names
-        self.camera_entry2['values'] = self.camera_controller.camera_names
-        self.camera_entry3['values'] = self.camera_controller.camera_names
-        
-        
-        
+        if self.camera_controller.camera_names != []:
+            self.camera_entry1['values'] = self.camera_controller.camera_names
+            self.camera_entry2['values'] = self.camera_controller.camera_names
+            self.CB_cam_ws['values'] = self.camera_controller.camera_names
         
         
 # Función para actualizar las imágenes en la interfaz
@@ -534,16 +693,19 @@ class VisionTab:
         
 
         # Actualizar las etiquetas en la interfaz
-        self.lbl_vision_figure1.config(image=img1)
-        self.lbl_vision_figure1.image = img1
+        self.L_img_top.config(image=img1)
+        self.L_img_top.image = img1
 
-        self.lbl_vision_figure2.config(image=img2)
-        self.lbl_vision_figure2.image = img2
+        self.L_img_front.config(image=img2)
+        self.L_img_front.image = img2
 
 
-    def _create_image_with_text(self, text, size=(320, 240)):
+    def _create_image_with_text(self, text, aspect_ratio:float=0.5):
+
+        img_size = (int(640 * aspect_ratio), int(480 * aspect_ratio))
+
         # Crear una imagen negra de tamaño 320x240
-        image = Image.new('RGB', size, color='black')
+        image = Image.new('RGB', img_size, color='black')
         
         # Crear un objeto para dibujar en la imagen
         draw = ImageDraw.Draw(image)
@@ -560,7 +722,7 @@ class VisionTab:
         # Calcular el tamaño del texto y su posición para centrarlo
         text_bbox = draw.textbbox((0, 0), text, font=font)  # Obtiene las dimensiones del texto
         text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
-        position = ((size[0] - text_width) // 2, (size[1] - text_height) // 2)
+        position = ((img_size[0] - text_width) // 2, (img_size[1] - text_height) // 2)
         
         # Dibujar el texto en la imagen
         draw.text(position, text, font=font, fill=text_color)
@@ -569,22 +731,75 @@ class VisionTab:
         tk_image = PhotoImage(image, master=self.root)
         
         return tk_image
-
     
-    def _adjust_tab_titles(self, fuente):
-        
-        # Obtener el ancho disponible para las pestañas
-        font = Font(font=fuente)
-        total_width = self.notebook.winfo_screenwidth()
-        tab_count = len(self.tabs)
-        tab_width = total_width // tab_count
+    def estilo(self):
+        style = ttk.Style()
+        style.configure("Custom.TNotebook.Tab",
+            font= ("Montserrat Medium", 12), 
+            background= "white",
+            )
 
-        # Ajustar el texto de cada pestaña
-        for index, tab in enumerate(self.tabs):
-            # Calcular el número de espacios necesarios
-            spaces_needed = (tab_width - len(tab) * 8) // 2  # Aproximadamente 8 píxeles por carácter
-            spaces = " " * max(spaces_needed // font.measure(" "), 0)  # Dividir espacios entre ambos lados
-            self.tabs[index] = f"{spaces}{tab}{spaces}"
+        style.configure("Custom.TNotebook",
+            background= "white",
+            )
+
+        style.configure("Custom.TFrame",
+            font= ("Montserrat Medium", 12), 
+            background= "white",
+            borderwidth=0,  # Grosor del borde
+            )
+
+        style.map(
+            "Custom.TNotebook.Tab",
+            background=[("selected", "#8C85F7"), ("active", "#8C85F7"), ("!selected", "white")],     # Background color when hovered
+            foreground=[("selected", "black"), ("active", "black"), ("!selected", "black")],   # Text color when hovered
+        )
+
+        style.configure("Vision.TNotebook.Tab",
+            font= ("Montserrat Medium", 10), 
+            background= "white",
+            borderwidth=0,  # Grosor del borde
+            )
+
+        style.configure("Vision.TNotebook",
+            background= "white",
+            borderwidth=0
+            )
+
+        style.configure("Custom.TFrame",
+            font= ("Montserrat Medium", 12), 
+            background= "white",
+            borderwidth=0,  # Grosor del borde
+            )
+
+        style.map(
+            "Vision.TNotebook.Tab",
+            background=[("selected", "#C5C1F7"), ("active", "#C5C1F7"), ("!selected", "white")],     # Background color when hovered
+            foreground=[("selected", "black"), ("active", "black"), ("!selected", "black")],   # Text color when hovered
+        )
+
+        style.configure(
+        "TCheckbutton",  # Nombre del estilo
+        font=("Montserrat", 10),  # Fuente personalizada
+        )
+
+        style.configure(
+        "TButton",  # Nombre del estilo
+        font=("Montserrat", 10),  # Fuente personalizada
+        )
+
+        style.configure(
+        "TLabelframe.Label",  # Nombre del estilo
+            font=("Montserrat", 10),
+        )
+    
+    def _on_closing(self):
+        """Esta función se ejecuta cuando la ventana se cierra."""
+        self.camera_controller.stop()
+        
+        # Cerrar la ventana de Tkinter
+        self.root.destroy()
+        exit()
             
 if __name__ == "__main__":
 
