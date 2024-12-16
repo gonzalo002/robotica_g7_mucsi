@@ -149,10 +149,10 @@ class VisionTab:
         self.F_segunda_col.grid(row=0, column=0, sticky="nsew",padx=0, pady=0)
         self.F_segunda_col.grid_rowconfigure(0, weight=1)
         self.F_segunda_col.grid_columnconfigure(0, weight=1)
-
+        
         self.B_ActualizarCam = ttk.Button(self.F_segunda_col, 
                                  text="ACTUALIZAR CAMARAS",
-                                 bootstyle="primary",
+                                 bootstyle="warning",
                                  command=self.update_cameras)
         self.B_ActualizarCam.grid(row=0, column=0, sticky="nsew",padx=10, pady=10)
          
@@ -210,7 +210,7 @@ class VisionTab:
             self.F_segunda_fila,
             text="PROCESAR",
             command=self.process_images,  # Función para procesar las imágenes
-            bootstyle="warning",  # Estilo del botón
+            bootstyle="secondary",  # Estilo del botón
         )
         self.process_button.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
@@ -272,7 +272,7 @@ class VisionTab:
             self.F_ws_col_2,
             text="PROCESAR",
             command=self.xy_process_images,   # Función para procesar las imágenes
-            bootstyle="warning",
+            bootstyle="secondary",
         )
         self.xy_process_button.grid(row=1, column=0, sticky="nsew", padx=10, pady=10,)
         
@@ -323,12 +323,12 @@ class VisionTab:
 
         if self.V_modo.get() == 1:
             self.L_camOFF.config(font=("Montserrat", 10), foreground="#474B4E")
-            self.L_camON.config(font=("Montserrat", 10, "bold"), foreground="#8c85f7")
+            self.L_camON.config(font=("Montserrat", 10, "bold"), foreground="#5eaae8")
             self.camera_inputs()
             self.start_camera()
 
         else:
-            self.L_camOFF.config(font=("Montserrat", 10, "bold"), foreground="#8c85f7")
+            self.L_camOFF.config(font=("Montserrat", 10, "bold"), foreground="#5eaae8")
             self.L_camON.config(font=("Montserrat", 10), foreground="#474B4E")
             self.stop_camera()
             self.file_inputs()
@@ -419,19 +419,15 @@ class VisionTab:
         """Detiene el feed de la cámara."""
         self.camera_active = False
 
-    def _update_camera(self, camera_index, size:list=(320, 240)):
+    def _update_camera(self, camera_index, aspect_ratio:float=0.5):
         frame = self.camera_controller.get_frame(camera_index)
 
         if frame is not None:
             img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
-            # Redimensionar la imagen
-            aspect_ratio = img.height / img.width
-            height = int(size[0] * aspect_ratio)
-            img = img.resize((size[0], height), Image.Resampling.LANCZOS)
+            img = img.resize((img.height*aspect_ratio, img.height*aspect_ratio), Image.Resampling.LANCZOS)
             imgtk = ImageTk.PhotoImage(image=img)
         else:
-            imgtk = self._create_image_with_text("Cámara NO encontrada", size)
+            imgtk = self._create_image_with_text("Cámara NO encontrada", aspect_ratio)
         
         return imgtk, frame
     
@@ -479,10 +475,10 @@ class VisionTab:
         if self.state_procesar_xy:
             if self.CB_cam_ws.get() != '':
                 index = self.camera_controller.camera_names.index(self.CB_cam_ws.get())
-                imgtk, frame = self._update_camera(index, (480, 360))
+                imgtk, frame = self._update_camera(index, (512, 360))
 
             else:
-                imgtk = self._create_image_with_text("Cámara NO encontrada",(480, 360))
+                imgtk = self._create_image_with_text("Cámara NO encontrada", 0.8)
                 frame = None
 
             self.img_ws = frame
@@ -536,7 +532,7 @@ class VisionTab:
         
             return frame
         
-        return self._create_image_with_text("CARGAR IMAGEN", (480, 360))
+        return self._create_image_with_text("CARGAR IMAGEN", 0.8)
 
     def xy_process_images(self):
         if self.img_ws is not None:
@@ -551,7 +547,7 @@ class VisionTab:
 
             #Resize
             img_ws_processed = Image.fromarray(cv2.cvtColor(img_ws_processed, cv2.COLOR_BGR2RGB))
-            photo1 = self._resize_image(img_ws_processed, 480)
+            photo1 = self._resize_image(img_ws_processed, 0.8)
 
             photo1 = ImageTk.PhotoImage(photo1)
             self.L_img_ws.config(image=photo1)
@@ -603,9 +599,6 @@ class VisionTab:
         if self.img_front is not None and self.img_plant is not None:
             self.process_button.state([ttk.DISABLED])
             self.clear_button.state(["!disabled"])
-            if self.V_modo.get() != 1:
-                self.B_browse_1.state([ttk.DISABLED])
-                self.B_browse_2.state([ttk.DISABLED])
 
             self.state_procesar = False
 
@@ -615,8 +608,8 @@ class VisionTab:
             #Resize
             img_procesed_front = Image.fromarray(cv2.cvtColor(img_procesed_front, cv2.COLOR_BGR2RGB))
             img_procesed_plant = Image.fromarray(cv2.cvtColor(img_procesed_plant, cv2.COLOR_BGR2RGB))
-            photo1 = self._resize_image(img_procesed_plant, self.width)
-            photo2 = self._resize_image(img_procesed_front, self.width)
+            photo1 = self._resize_image(img_procesed_plant)
+            photo2 = self._resize_image(img_procesed_front)
 
             photo1 = ImageTk.PhotoImage(photo1)
             self.L_img_top.config(image=photo1)
@@ -634,10 +627,9 @@ class VisionTab:
             self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
             self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
 
-    def _resize_image(self, img, width):
-        aspect_ratio = img.height / img.width
-        height = int(width * aspect_ratio)
-        return img.resize((width, height))    
+    def _resize_image(self, img:Image.Image, aspect_ratio:float=0.5):
+        img_size = (int(img.width * aspect_ratio), int(img.height * aspect_ratio))
+        return img.resize(img_size)    
     
     def clear_images(self):
         self.clear_button.state([ttk.DISABLED])
@@ -680,9 +672,10 @@ class VisionTab:
     def update_cameras(self):
         self.camera_controller.stop()
         self.camera_controller.start(10)
-        self.camera_entry1['values'] = self.camera_controller.camera_names
-        self.camera_entry2['values'] = self.camera_controller.camera_names
-        self.CB_cam_ws['values'] = self.camera_controller.camera_names
+        if self.camera_controller.camera_names != []:
+            self.camera_entry1['values'] = self.camera_controller.camera_names
+            self.camera_entry2['values'] = self.camera_controller.camera_names
+            self.CB_cam_ws['values'] = self.camera_controller.camera_names
         
         
 # Función para actualizar las imágenes en la interfaz
@@ -699,9 +692,12 @@ class VisionTab:
         self.L_img_front.image = img2
 
 
-    def _create_image_with_text(self, text, size=(320, 240)):
+    def _create_image_with_text(self, text, aspect_ratio:float=0.5):
+
+        img_size = (int(640 * aspect_ratio), int(480 * aspect_ratio))
+
         # Crear una imagen negra de tamaño 320x240
-        image = Image.new('RGB', size, color='black')
+        image = Image.new('RGB', img_size, color='black')
         
         # Crear un objeto para dibujar en la imagen
         draw = ImageDraw.Draw(image)
@@ -718,7 +714,7 @@ class VisionTab:
         # Calcular el tamaño del texto y su posición para centrarlo
         text_bbox = draw.textbbox((0, 0), text, font=font)  # Obtiene las dimensiones del texto
         text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
-        position = ((size[0] - text_width) // 2, (size[1] - text_height) // 2)
+        position = ((img_size[0] - text_width) // 2, (img_size[1] - text_height) // 2)
         
         # Dibujar el texto en la imagen
         draw.text(position, text, font=font, fill=text_color)
@@ -727,19 +723,3 @@ class VisionTab:
         tk_image = PhotoImage(image, master=self.root)
         
         return tk_image
-
-    
-    def _adjust_tab_titles(self, fuente):
-        
-        # Obtener el ancho disponible para las pestañas
-        font = Font(font=fuente)
-        total_width = self.notebook.winfo_screenwidth()
-        tab_count = len(self.tabs)
-        tab_width = total_width // tab_count
-
-        # Ajustar el texto de cada pestaña
-        for index, tab in enumerate(self.tabs):
-            # Calcular el número de espacios necesarios
-            spaces_needed = (tab_width - len(tab) * 8) // 2  # Aproximadamente 8 píxeles por carácter
-            spaces = " " * max(spaces_needed // font.measure(" "), 0)  # Dividir espacios entre ambos lados
-            self.tabs[index] = f"{spaces}{tab}{spaces}"

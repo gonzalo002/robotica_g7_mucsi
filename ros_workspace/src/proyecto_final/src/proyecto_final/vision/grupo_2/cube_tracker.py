@@ -63,7 +63,10 @@ class CubeTracker:
             @param frame (numpy array) - Imagen en formato BGR.
             @return gray_frame (numpy array) - Imagen en escala de grises.
         '''
-        return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        img_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if self.debug:
+            cv2.imshow("Gray Image", img_gray)
+        return img_gray
     
     def _aplicar_filtro_hsv(self, frame:np.ndarray) -> np.ndarray:
         ''' 
@@ -71,28 +74,29 @@ class CubeTracker:
             @param frame (numpy array) - Imagen en formato BGR.
             @return hsv_frame (numpy array) - Imagen en espacio de color HSV.
         '''
-        return cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        if self.debug:
+            cv2.imshow("HSV Image", img_hsv)
+
+        return img_hsv
+
     
-    def _procesar_umbral_otsu(self, gray:np.ndarray) -> np.ndarray:
+    def _procesar_umbral_manual(self, gray:np.ndarray, threshold:int=70) -> np.ndarray:
         ''' 
         Aplica un umbral de Otsu para binarizar la imagen.
             @param gray (numpy array) - Imagen en escala de grises.
             @return otsu_thresh (numpy array) - Imagen binarizada tras el umbral de Otsu.
         '''
-        _, otsu_thresh = cv2.threshold(gray, 70, 255, cv2.THRESH_BINARY)
-        #_, otsu_thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        if self.debug:
-            cv2.imshow("Otsu", otsu_thresh)
+        _, binary_image = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
         kernel = np.ones((3, 3), np.uint8)
-        return cv2.morphologyEx(otsu_thresh, cv2.MORPH_CLOSE, kernel, iterations=1)
+        morfology = cv2.morphologyEx(binary_image, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+        if self.debug:
+            cv2.imshow("Otsu + Morfology", morfology)
+
+        return morfology
+
     
-    def _procesar_umbral_dinamico(self, gray: np.ndarray) -> np.ndarray:
-        # Umbral dinámico basado en la media local (adaptive thresholding)
-        adapt_thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-        if self.debug:
-            cv2.imshow("Umbral Dinámico", adapt_thresh)
-        kernel = np.ones((3, 3), np.uint8)
-        return cv2.morphologyEx(adapt_thresh, cv2.MORPH_CLOSE, kernel, iterations=1)
     
     def _detectar_bordes(self, imagen:np.ndarray) -> np.ndarray:
         ''' 
@@ -105,6 +109,7 @@ class CubeTracker:
         
         if self.debug:
             cv2.imshow("Canny", canny)
+
             
         return canny
             
@@ -117,20 +122,16 @@ class CubeTracker:
         '''
         contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
-        # Filtrar los contornos externos que tienen un padre
-        filtered_contours = []
-        for i, (next_bro, prev_bro, child, parent) in enumerate(hierarchy[0]):
-            if next_bro != 0:  # Contorno exterior con padre
-                filtered_contours.append(contours[i])
 
         if self.debug:
             img = self.frame.copy()
-            cv2.drawContours(img, filtered_contours, -1, (0,255,0))
+            cv2.drawContours(img, contours, -1, (0,255,0))
             cv2.imshow('Todos los Contornos', img)
-        return filtered_contours
+
+        return contours
 
 
-    def _identificar_cubo_y_color(self, contours: list, frame: np.ndarray, hsv_frame: np.ndarray, gray: np.ndarray, area_size: int = 1000, mostrar:bool = False) -> np.ndarray:
+    def _identificar_cubo_y_color(self, contours: list, frame: np.ndarray, hsv_frame: np.ndarray, mostrar:bool = False) -> np.ndarray:
         ''' 
         Identifica cubos en la imagen y les asigna un color basado en el espacio HSV.
         '''
@@ -144,8 +145,7 @@ class CubeTracker:
         tolerancia = 0.2
         area_size = [cv2.contourArea(cnt) for cnt in contours]
         mode_cubes = np.median(area_size)
-        mask = np.zeros_like(gray)  # Crear una máscara una sola vez
-        
+
         i = 0
         # Recorrer los contornos y realizar las operaciones necesarias
         for u, cnt in enumerate(contours):
@@ -262,11 +262,13 @@ class CubeTracker:
             cv2.fillPoly(mask, expanded_corners, (0, 0, 0))
 
             # Mostrar la máscara generada
-            if self.debug:
-                cv2.imshow("Mask", mask)
+
 
             # Crear la imagen final aplicando la máscara a la imagen original
             frame_with_mask = cv2.bitwise_and(frame, mask)
+            if self.debug:
+                cv2.imshow("Mask", mask)
+                cv2.imshow("Frame with Mask", frame_with_mask)
             
             # Calcular el lado 
             self.side_lengths_px = self._calcular_lados(corners_deep)
@@ -341,7 +343,7 @@ class CubeTracker:
 
         return expanded_corners
 
-    def process_image(self, frame:np.ndarray, area_size:int=1000, mostrar:bool = False, debug:bool = False) -> list:
+    def process_image(self, frame:np.ndarray, threshold:int=70, mostrar:bool = False, debug:bool = False) -> list:
         ''' 
         Procesa una imagen para detectar cubos y sus colores, y muestra los resultados.
             @param frame (numpy array) - Imagen de entrada en formato BGR.
@@ -351,9 +353,8 @@ class CubeTracker:
         '''
         self.debug = debug
         # Realizar copia del frame
-        self.frame = deepcopy(cv2.undistort(frame, self.camera_matrix, self.dist_coeffs))
         frame = deepcopy(cv2.undistort(frame, self.camera_matrix, self.dist_coeffs))
-        
+        self.frame = deepcopy(frame)
 
         # Detectar Aruco
         mask_frame, aruco_frame = self._detectar_aruco(frame)
@@ -363,14 +364,15 @@ class CubeTracker:
             
         gray = self._aplicar_filtro_grises(mask_frame)
         hsv_frame = self._aplicar_filtro_hsv(mask_frame)
-        morph_clean = self._procesar_umbral_otsu(gray)
-        edges = self._detectar_bordes(morph_clean)
+        binary = self._procesar_umbral_manual(gray, threshold)
+        edges = self._detectar_bordes(binary)
         contours = self._encontrar_contornos(edges)
         
-        resultado = self._identificar_cubo_y_color(contours, aruco_frame, hsv_frame, gray, area_size, mostrar)
+        resultado = self._identificar_cubo_y_color(contours, aruco_frame, hsv_frame, mostrar)
 
         if mostrar:
             cv2.imshow('Contoured Image', self.imagen_analizada)
+
 
             if cv2.waitKey(0) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
@@ -378,7 +380,7 @@ class CubeTracker:
         return self.imagen_analizada, resultado
 
 if __name__ == "__main__":
-    use_cam = True
+    use_cam = False
     cube_tracker = CubeTracker(cam_calib_path="/home/laboratorio/ros_workspace/src/proyecto_final/data/camera_data/ost.yaml")
 
     if use_cam:
@@ -387,11 +389,11 @@ if __name__ == "__main__":
             _, frame = cam.read()
             cv2.imshow("hola", frame)
     else:
-        num = 1
+        num = 2
         ruta = f'/home/laboratorio/ros_workspace/src/proyecto_final/data/example_img/Cubos_Exparcidos/Cubos_Exparcidos_{num}.png'
         frame = cv2.imread(ruta)
 
-    _, resultado = cube_tracker.process_image(frame, area_size=1000, mostrar=True, debug=True)
+    _, resultado = cube_tracker.process_image(frame, mostrar=True, debug=True)
     print(resultado)
     if use_cam:
         cam.release()
