@@ -305,6 +305,7 @@ class VisionTab:
         # --- ELEMENTS ---
         fig_3d = self.Geometry3D.generate_figure_from_matrix(np.full((5,5),-1), 
                                                              np.full((5,5),-1), 
+                                                             paint=True,
                                                              tkinter=True)
         self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
         self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
@@ -432,7 +433,7 @@ class VisionTab:
 
         if frame is not None:
             img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            img = img.resize((img.height*aspect_ratio, img.height*aspect_ratio), Image.Resampling.LANCZOS)
+            img = self._resize_image(img, aspect_ratio)
             imgtk = ImageTk.PhotoImage(image=img)
         else:
             imgtk = self._create_image_with_text("Cámara NO encontrada", aspect_ratio)
@@ -483,7 +484,7 @@ class VisionTab:
         if self.state_procesar_xy:
             if self.CB_cam_ws.get() != '':
                 index = self.camera_controller.camera_names.index(self.CB_cam_ws.get())
-                imgtk, frame = self._update_camera(index, (512, 360))
+                imgtk, frame = self._update_camera(index, 0.8)
 
             else:
                 imgtk = self._create_image_with_text("Cámara NO encontrada", 0.8)
@@ -631,7 +632,7 @@ class VisionTab:
             if hasattr(self, "canvas_3d"):
                 self.canvas_3d.get_tk_widget().destroy()
 
-            fig_3d = self.Geometry3D.generate_figure_from_matrix(plant_matrix, front_matrix, tkinter=True)
+            fig_3d = self.Geometry3D.generate_figure_from_matrix(plant_matrix, front_matrix, paint=True, tkinter=True)
             self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
             self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
 
@@ -642,8 +643,9 @@ class VisionTab:
     def clear_images(self):
         self.clear_button.state([ttk.DISABLED])
         self.process_button.state(["!disabled"])
-        self.B_browse_1.state(["!disabled"])
-        self.B_browse_2.state(["!disabled"])
+        if self.V_modo == 1:
+            self.B_browse_1.state(["!disabled"])
+            self.B_browse_2.state(["!disabled"])
         self.state_procesar = True
 
         # --- VACIAR MATRIZ ---
@@ -651,7 +653,8 @@ class VisionTab:
             self.canvas_3d.get_tk_widget().destroy()
 
         fig_3d = self.Geometry3D.generate_figure_from_matrix(np.full((5,5),-1), 
-                                                             np.full((5,5),-1), 
+                                                             np.full((5,5),-1),
+                                                             paint=True, 
                                                              tkinter=True)
         self.canvas_3d = FigureCanvasTkAgg(fig_3d, self.LF_3d_fila)
         self.canvas_3d.get_tk_widget().grid(row=0, column=0, pady=20, padx=10, sticky="nsew")
@@ -684,6 +687,9 @@ class VisionTab:
             self.camera_entry1['values'] = self.camera_controller.camera_names
             self.camera_entry2['values'] = self.camera_controller.camera_names
             self.CB_cam_ws['values'] = self.camera_controller.camera_names
+        self.update_camera_feed_1()
+        self.update_camera_feed_2()
+        self.update_camera_feed_3()
         
         
 # Función para actualizar las imágenes en la interfaz
