@@ -21,3 +21,10 @@ from ._HandFeedback import *
 from ._HandGoal import *
 from ._HandResult import *
 from ._IdCubos import *
+from ._RLAction import *
+from ._RLActionFeedback import *
+from ._RLActionGoal import *
+from ._RLActionResult import *
+from ._RLFeedback import *
+from ._RLGoal import *
+from ._RLResult import *

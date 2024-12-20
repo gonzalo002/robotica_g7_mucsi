@@ -7,14 +7,14 @@
 ;//! \htmlinclude FigurasResult.msg.html
 
 (cl:defclass <FigurasResult> (roslisp-msg-protocol:ros-message)
-  ((up
-    :reader up
-    :initarg :up
+  ((figure_3d
+    :reader figure_3d
+    :initarg :figure_3d
     :type (cl:vector cl:fixnum)
    :initform (cl:make-array 0 :element-type 'cl:fixnum :initial-element 0))
-   (front
-    :reader front
-    :initarg :front
+   (shape_3d
+    :reader shape_3d
+    :initarg :shape_3d
     :type (cl:vector cl:fixnum)
    :initform (cl:make-array 0 :element-type 'cl:fixnum :initial-element 0)))
 )
@@ -27,18 +27,18 @@
   (cl:unless (cl:typep m 'FigurasResult)
     (roslisp-msg-protocol:msg-deprecation-warning "using old message class name proyecto_final-msg:<FigurasResult> is deprecated: use proyecto_final-msg:FigurasResult instead.")))
 
-(cl:ensure-generic-function 'up-val :lambda-list '(m))
-(cl:defmethod up-val ((m <FigurasResult>))
-  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:up-val is deprecated.  Use proyecto_final-msg:up instead.")
-  (up m))
+(cl:ensure-generic-function 'figure_3d-val :lambda-list '(m))
+(cl:defmethod figure_3d-val ((m <FigurasResult>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:figure_3d-val is deprecated.  Use proyecto_final-msg:figure_3d instead.")
+  (figure_3d m))
 
-(cl:ensure-generic-function 'front-val :lambda-list '(m))
-(cl:defmethod front-val ((m <FigurasResult>))
-  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:front-val is deprecated.  Use proyecto_final-msg:front instead.")
-  (front m))
+(cl:ensure-generic-function 'shape_3d-val :lambda-list '(m))
+(cl:defmethod shape_3d-val ((m <FigurasResult>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:shape_3d-val is deprecated.  Use proyecto_final-msg:shape_3d instead.")
+  (shape_3d m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <FigurasResult>) ostream)
   "Serializes a message object of type '<FigurasResult>"
-  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'up))))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'figure_3d))))
     (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
@@ -46,8 +46,8 @@
   (cl:map cl:nil #'(cl:lambda (ele) (cl:let* ((signed ele) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 256) signed)))
     (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
     ))
-   (cl:slot-value msg 'up))
-  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'front))))
+   (cl:slot-value msg 'figure_3d))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'shape_3d))))
     (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
@@ -55,7 +55,7 @@
   (cl:map cl:nil #'(cl:lambda (ele) (cl:let* ((signed ele) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 256) signed)))
     (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
     ))
-   (cl:slot-value msg 'front))
+   (cl:slot-value msg 'shape_3d))
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <FigurasResult>) istream)
   "Deserializes a message object of type '<FigurasResult>"
@@ -64,8 +64,8 @@
     (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
-  (cl:setf (cl:slot-value msg 'up) (cl:make-array __ros_arr_len))
-  (cl:let ((vals (cl:slot-value msg 'up)))
+  (cl:setf (cl:slot-value msg 'figure_3d) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'figure_3d)))
     (cl:dotimes (i __ros_arr_len)
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
@@ -75,8 +75,8 @@
     (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
-  (cl:setf (cl:slot-value msg 'front) (cl:make-array __ros_arr_len))
-  (cl:let ((vals (cl:slot-value msg 'front)))
+  (cl:setf (cl:slot-value msg 'shape_3d) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'shape_3d)))
     (cl:dotimes (i __ros_arr_len)
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
@@ -91,24 +91,24 @@
   "proyecto_final/FigurasResult")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<FigurasResult>)))
   "Returns md5sum for a message object of type '<FigurasResult>"
-  "d57cf924ec719c04c0d0db866abe5ad7")
+  "2dd48b8210a611fb9aa995a1d0cf957d")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'FigurasResult)))
   "Returns md5sum for a message object of type 'FigurasResult"
-  "d57cf924ec719c04c0d0db866abe5ad7")
+  "2dd48b8210a611fb9aa995a1d0cf957d")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<FigurasResult>)))
   "Returns full string definition for message of type '<FigurasResult>"
-  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%#result definition~%int8[] up~%int8[] front~%~%~%"))
+  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%# Result~%int8[] figure_3d~%int8[] shape_3d~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'FigurasResult)))
   "Returns full string definition for message of type 'FigurasResult"
-  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%#result definition~%int8[] up~%int8[] front~%~%~%"))
+  (cl:format cl:nil "# ====== DO NOT MODIFY! AUTOGENERATED FROM AN ACTION DEFINITION ======~%# Result~%int8[] figure_3d~%int8[] shape_3d~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <FigurasResult>))
   (cl:+ 0
-     4 (cl:reduce #'cl:+ (cl:slot-value msg 'up) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
-     4 (cl:reduce #'cl:+ (cl:slot-value msg 'front) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'figure_3d) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'shape_3d) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 1)))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <FigurasResult>))
   "Converts a ROS message object to a list"
   (cl:list 'FigurasResult
-    (cl:cons ':up (up msg))
-    (cl:cons ':front (front msg))
+    (cl:cons ':figure_3d (figure_3d msg))
+    (cl:cons ':shape_3d (shape_3d msg))
 ))

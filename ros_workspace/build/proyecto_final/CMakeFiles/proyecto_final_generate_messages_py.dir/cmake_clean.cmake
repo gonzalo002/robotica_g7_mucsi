@@ -22,6 +22,13 @@ file(REMOVE_RECURSE
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_HandGoal.py"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_HandResult.py"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_IdCubos.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLAction.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLActionFeedback.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLActionGoal.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLActionResult.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLFeedback.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLGoal.py"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/_RLResult.py"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/lib/python3/dist-packages/proyecto_final/msg/__init__.py"
   "CMakeFiles/proyecto_final_generate_messages_py"
 )

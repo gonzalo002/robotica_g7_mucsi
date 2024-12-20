@@ -22,6 +22,13 @@ file(REMOVE_RECURSE
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/HandGoal.js"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/HandResult.js"
   "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/IdCubos.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLAction.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLActionFeedback.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLActionGoal.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLActionResult.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLFeedback.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLGoal.js"
+  "/home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/gennodejs/ros/proyecto_final/msg/RLResult.js"
   "CMakeFiles/proyecto_final_generate_messages_nodejs"
 )
 

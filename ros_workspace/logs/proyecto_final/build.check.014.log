@@ -1,0 +1,110 @@
+[36m--[0m Using CATKIN_DEVEL_PREFIX: /home/laboratorio/ros_workspace/devel/.private/proyecto_final
+[36m--[0m Using CMAKE_PREFIX_PATH: /home/laboratorio/ros_workspace/devel;/opt/ros/noetic
+[36m--[0m This workspace overlays: /home/laboratorio/ros_workspace/devel;/opt/ros/noetic
+[36m--[0m Found PythonInterp: /usr/bin/python3 (found suitable version "3.8.10", minimum required is "3")
+[36m--[0m Using PYTHON_EXECUTABLE: /usr/bin/python3
+[36m--[0m Using Debian Python package layout
+[36m--[0m Using empy: /usr/lib/python3/dist-packages/em.py
+[36m--[0m Using CATKIN_ENABLE_TESTING: ON
+[36m--[0m Call enable_testing()
+[36m--[0m Using CATKIN_TEST_RESULTS_DIR: /home/laboratorio/ros_workspace/build/proyecto_final/test_results
+[36m--[0m Forcing gtest/gmock from source, though one was otherwise available.
+[36m--[0m Found gtest sources under '/usr/src/googletest': gtests will be built
+[36m--[0m Found gmock sources under '/usr/src/googletest': gmock will be built
+[36m--[0m Found PythonInterp: /usr/bin/python3 (found version "3.8.10")
+[36m--[0m Using Python nosetests: /usr/bin/nosetests3
+[36m--[0m catkin 0.8.10
+[36m--[0m BUILD_SHARED_LIBS is on
+[36m--[0m Using these message generators: gencpp;geneus;genlisp;gennodejs;genpy
+[36m--[0m Generating .msg files for action proyecto_final/Cubos /home/laboratorio/ros_workspace/src/proyecto_final/action/Cubos.action
+[36m--[0m Generating .msg files for action proyecto_final/Figuras /home/laboratorio/ros_workspace/src/proyecto_final/action/Figuras.action
+Generating for action Figuras
+[36m--[0m Generating .msg files for action proyecto_final/Hand /home/laboratorio/ros_workspace/src/proyecto_final/action/Hand.action
+[36m--[0m Generating .msg files for action proyecto_final/RL /home/laboratorio/ros_workspace/src/proyecto_final/action/RL.action
+/opt/ros/noetic/share/genmsg/cmake/pkg-genmsg.cmake.em:56: error: <class 'genmsg.base.MsgGenerationException'>: Cannot read .msg for proyecto_final/FigurasAction: /home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/FigurasResult.msg: invalid field: Currently only support 1-dimensional array types: int8[][][]
+Traceback (most recent call last):
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msgs.py", line 265, in __init__
+    self._parsed_fields = [Field(name, type) for (name, type) in zip(self.names, self.types)]
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msgs.py", line 265, in <listcomp>
+    self._parsed_fields = [Field(name, type) for (name, type) in zip(self.names, self.types)]
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msgs.py", line 214, in __init__
+    (self.base_type, self.is_array, self.array_len) = parse_type(type)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msgs.py", line 101, in parse_type
+    raise ValueError("Currently only support 1-dimensional array types: %s"%msg_type)
+ValueError: Currently only support 1-dimensional array types: int8[][][]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 287, in load_msg_from_file
+    return load_msg_from_string(msg_context, text, full_name)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 269, in load_msg_from_string
+    spec = MsgSpec(types, names, constants, text, full_name, package_name)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msgs.py", line 267, in __init__
+    raise InvalidMsgSpec("invalid field: %s"%(e))
+genmsg.base.InvalidMsgSpec: invalid field: Currently only support 1-dimensional array types: int8[][][]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/deps.py", line 48, in find_msg_dependencies_with_type
+    genmsg.msg_loader.load_depends(msg_context, spec, search_paths)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 349, in load_depends
+    return load_msg_depends(msg_context, spec, msg_search_path)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 326, in load_msg_depends
+    load_msg_depends(msg_context, depspec, search_path)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 318, in load_msg_depends
+    depspec = load_msg_by_type(msg_context, resolved_type, search_path)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 128, in load_msg_by_type
+    spec = load_msg_from_file(msg_context, file_path, msg_type)
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/msg_loader.py", line 289, in load_msg_from_file
+    raise InvalidMsgSpec('%s: %s'%(file_path, e))
+genmsg.base.InvalidMsgSpec: /home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/FigurasResult.msg: invalid field: Currently only support 1-dimensional array types: int8[][][]
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/em.py", line 3302, in <module>
+    if __name__ == '__main__': main()
+  File "/usr/lib/python3/dist-packages/em.py", line 3300, in main
+    invoke(sys.argv[1:])
+  File "/usr/lib/python3/dist-packages/em.py", line 3283, in invoke
+    interpreter.wrap(interpreter.file, (file, name))
+  File "/usr/lib/python3/dist-packages/em.py", line 2295, in wrap
+    self.fail(e)
+  File "/usr/lib/python3/dist-packages/em.py", line 2284, in wrap
+    callable(*args)
+  File "/usr/lib/python3/dist-packages/em.py", line 2359, in file
+    self.safe(scanner, done, locals)
+  File "/usr/lib/python3/dist-packages/em.py", line 2401, in safe
+    self.parse(scanner, locals)
+  File "/usr/lib/python3/dist-packages/em.py", line 2421, in parse
+    token.run(self, locals)
+  File "/usr/lib/python3/dist-packages/em.py", line 1425, in run
+    interpreter.execute(self.code, locals)
+  File "/usr/lib/python3/dist-packages/em.py", line 2595, in execute
+    _exec(statements, self.globals, locals)
+  File "<string>", line 38, in <module>
+  File "/opt/ros/noetic/lib/python3/dist-packages/genmsg/deps.py", line 50, in find_msg_dependencies_with_type
+    raise genmsg.MsgGenerationException("Cannot read .msg for %s: %s"%(full_type_name, str(e)))
+genmsg.base.MsgGenerationException: Cannot read .msg for proyecto_final/FigurasAction: /home/laboratorio/ros_workspace/devel/.private/proyecto_final/share/proyecto_final/msg/FigurasResult.msg: invalid field: Currently only support 1-dimensional array types: int8[][][]
+[31m[1mCMake Error[0m at /opt/ros/noetic/share/catkin/cmake/safe_execute_process.cmake:11 (message):
+
+  execute_process(/home/laboratorio/ros_workspace/build/proyecto_final/catkin_generated/env_cached.sh
+  "/usr/bin/python3" "/usr/lib/python3/dist-packages/em.py" "--raw-errors"
+  "-F"
+  "/home/laboratorio/ros_workspace/build/proyecto_final/cmake/proyecto_final-genmsg-context.py"
+  "-o"
+  "/home/laboratorio/ros_workspace/build/proyecto_final/cmake/proyecto_final-genmsg.cmake"
+  "/opt/ros/noetic/share/genmsg/cmake/pkg-genmsg.cmake.em") returned error
+  code 1
+[36mCall Stack (most recent call first):[0m
+  /opt/ros/noetic/share/catkin/cmake/em_expand.cmake:25 (safe_execute_process)
+  /opt/ros/noetic/share/genmsg/cmake/genmsg-extras.cmake:303 (em_expand)
+  CMakeLists.txt:78 (generate_messages)
+
+
+[36m--[0m Configuring incomplete, errors occurred!
+See also "/home/laboratorio/ros_workspace/build/proyecto_final/CMakeFiles/CMakeOutput.log".
+See also "/home/laboratorio/ros_workspace/build/proyecto_final/CMakeFiles/CMakeError.log".
+make: *** [Makefile:1356: cmake_check_build_system] Error 1
