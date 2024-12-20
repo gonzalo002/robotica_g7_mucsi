@@ -5,11 +5,13 @@ from math import pi
 from copy import deepcopy
 from threading import Thread
 from cv_bridge import CvBridge
+from collections import Counter
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Quaternion
 from tf.transformations import quaternion_from_euler
 from proyecto_final.vision.grupo_2.cube_tracker import CubeTracker
 from proyecto_final.msg import CubosAction, CubosFeedback, CubosGoal, CubosResult, IdCubos
+from proyecto_final.funciones_auxiliares import crear_mensaje
 
 
 class CubeTrackerActionServer(object):
@@ -17,20 +19,31 @@ class CubeTrackerActionServer(object):
     def __init__(self):
         # Inicializar nodo
         rospy.init_node('cube_tracker_node')
+        self.name = "CubeTrackerActionServer"
+
+        # Obtenemos parámetro camara
+        cam_on = rospy.get_param("~cam_on", False)
+        if cam_on not in [True, False]:
+            crear_mensaje("El parámetro 'cam_on' debe ser True o False. Se usará el valor predeterminado 'True'.", "WARN", self.name)
+            rospy.logwarn("")
+            cam_on = True
 
         # Definición de variables Python
         self.file_path = '/'.join(os.path.dirname(os.path.abspath(__file__)).split('/')[:os.path.dirname(os.path.abspath(__file__)).split('/').index('proyecto_final')+1])
-        self.obtain_img = False
-        self.cv_img = None
+        self.running = False
         self.CubeTracker = CubeTracker(cam_calib_path=f"{self.file_path}/data/necessary_data/ost.yaml")
-        self.bridge = CvBridge()
-        self.color_counter = [0,0,0,0]
-        
-        # Definicion de variables ROS
-        self.subs_cam = rospy.Subscriber('/top_cam/image_raw', Image, self.cb_image)
-        self._action_server = actionlib.SimpleActionServer('CubeTrackerActionServer', CubosAction, execute_cb=self.execute_cb, auto_start=False)
-        self._action_server.start()
 
+        # Definicion de variables ROS
+        if cam_on:
+            self.obtain_img = False
+            self.cv_img = []
+            self.bridge = CvBridge()
+            self._subs_cam = rospy.Subscriber('/top_cam/image_raw', Image, self.cb_image)
+            self.action_server = actionlib.SimpleActionServer('CubeTrackerActionServer', CubosAction, execute_cb=self.execute_cb_on, auto_start=False)
+        else:
+            self.action_server = actionlib.SimpleActionServer('CubeTrackerActionServer', CubosAction, execute_cb=self.execute_cb_off, auto_start=False)
+        
+        self.action_server.start()
         rospy.spin()
     
     def cb_image(self, image:Image)->None:
@@ -39,68 +52,118 @@ class CubeTrackerActionServer(object):
             @param image (Image) - Imagen de la camara
         '''
         if self.obtain_img:
-            self.cv_img = deepcopy(self.bridge.imgmsg_to_cv2(image, desired_encoding='passthrough'))
-            self.cv_img = deepcopy(cv2.cvtColor(self.cv_img, cv2.COLOR_RGB2BGR)) #Convertir imagen a BGR
-            self.obtain_img = False
+            if len(self.cv_img) < 11:
+                img = deepcopy(self.bridge.imgmsg_to_cv2(image, desired_encoding='passthrough'))
+                img = deepcopy(cv2.cvtColor(img, cv2.COLOR_RGB2BGR)) #Convertir imagen a BGR
+                self.cv_img.append(img)
+            else:
+                self.obtain_img = False
 
-    def execute_cb(self, goal:CubosGoal)->None:
+
+    def execute_cb_off(self, goal:CubosGoal)->None:
+        self.color_counter = [0,0,0,0]
+        # Crear y ejecutar el hilo de feedback
+        feedback = CubosFeedback()
+        self.running = True
+        feedback_thread = Thread(target=self.send_feedback, args=(feedback,))
+        feedback_thread.start()
+
+        img = cv2.imread(f"{self.file_path}/data/example_img/Cubos_Exparcidos/Cubos_Exparcidos_{goal.order}.png")
+        if img is None:
+            crear_mensaje("No se ha podido encontrar la imagen", "ERROR", self.name)
+            feedback.feedback = -1
+            self.action_server.publish_feedback(feedback)
+            self.running = False
+            feedback_thread.join()
+            self.action_server.set_aborted(resultado_final)
+            return
+        
+        resultado_final = CubosResult()
+        img_process, resultado = self.CubeTracker.process_image(img)
+        cv2.imwrite("CubeTracker.png", img_process)
+        resultado_final.cubes_position = self._dict_to_cube(resultado)
+        resultado_final.color_counter = self.color_counter
+
+        # Paso 3: Finalizar la acción con el resultado procesado
+        self.action_server.set_succeeded(resultado_final)
+
+        # Esperar a que el hilo de feedback termine
+        self.running = False
+        feedback_thread.join()
+
+
+    def execute_cb_on(self, goal:CubosGoal)->None:
         ''' 
         Callback del action server del CubeTracker
             @param goal (numpy array) - Goal recibido por el cliente
         '''
         self.color_counter = [0,0,0,0]
-        if goal.order == 1:
-            self.obtain_img = True
-            feedback = CubosFeedback()  # Crear un objeto de feedback
+        self.obtain_img = True
+        feedback = CubosFeedback()  # Crear un objeto de feedback
 
-            # Crear y ejecutar el hilo de feedback
-            feedback_thread = Thread(target=self.send_feedback, args=(feedback,))
-            feedback_thread.start()
+        # Crear y ejecutar el hilo de feedback
+        self.running = True
+        feedback_thread = Thread(target=self.send_feedback, args=(feedback,))
+        feedback_thread.start()
 
-            # Paso 1: Obtener la imagen con timeout
-            timeout = 5  # Tiempo máximo de espera en segundos
-            start_time = time()  # Guardar el tiempo de inicio
-
-            imagen = None
-            while imagen is None:
-                imagen = deepcopy(self.cv_img)
-
-                # Verificar si ha pasado el tiempo de espera
-                elapsed_time = time() - start_time
-                if elapsed_time > timeout:
-                    rospy.logwarn("Timeout al intentar obtener la imagen.")
-                    feedback.feedback = -1  # Enviar un valor de feedback para indicar el error
-                    self._action_server.publish_feedback(feedback)
-                    self._action_server.set_aborted()  # Marcar la acción como fallida
-                    return
-
-                rospy.sleep(0.2)
-                
-            if imagen is None:
+        # Paso 1: Obtener la imagen con timeout
+        timeout = 5
+        start_time = time()
+        while self.obtain_img:
+            elapsed_time = time() - start_time
+            if elapsed_time > timeout:
+                crear_mensaje("Timeout al intentar obtener la imagen", "ERROR", self.name)
+                feedback.feedback = -1
+                self.action_server.publish_feedback(feedback)
+                self.running = False
+                feedback_thread.join()
+                self.action_server.set_aborted()
                 return
 
-            # Paso 2: Procesar la imagen
-            resultado_final = CubosResult()
-            imagen_procesada, resultado = self.CubeTracker.process_image(imagen)
-            cv2.imwrite("cube_tracker.png", imagen_procesada)
-            resultado_final.cubes_position = self._dict_to_cube(resultado)
-            resultado_final.color_counter = self.color_counter
+            rospy.sleep(0.2)
+            
+        L_img = deepcopy(self.cv_img)
 
-            # Paso 3: Finalizar la acción con el resultado procesado
-            self._action_server.set_succeeded(resultado_final)
+        # Paso 2: Procesar la imagen
+        L_resultado = []
+        for i in range(len(L_img)):
+            img_process, resultado = self.CubeTracker.process_image(L_img[i])
+            L_resultado.append(resultado)
 
-            # Esperar a que el hilo de feedback termine
-            feedback_thread.join()
-            self.cv_img = None
+        resultado_final = CubosResult()
+        cv2.imwrite("CubeTracker.png", img_process)
+        resultado_final.cubes_position = self._dict_to_cube(resultado)
+        resultado_final.color_counter = self.color_counter
+
+        # Paso 3: Finalizar la acción con el resultado procesado
+        self.action_server.set_succeeded(resultado_final)
+
+        # Esperar a que el hilo de feedback termine
+        self.running = False
+        feedback_thread.join()
+        self.cv_img = []
+
+    def lista_mas_frecuente(lista_de_listas):
+        # Convertir cada lista de diccionarios en una tupla de colores
+        listas_colores = [tuple(sorted([item["color"] for item in lista])) for lista in lista_de_listas]
+
+        # Contar las ocurrencias de cada "lista de colores"
+        counter = Counter(listas_colores)
+
+        # Obtener la lista más frecuente (más común)
+        lista_mas_comun, _ = counter.most_common(1)[0]
+
+        # Convertir la tupla más común de vuelta al formato original
+        return list(lista_mas_comun)
 
     def send_feedback(self, feedback:CubosFeedback):
         ''' 
         Función que utiliza el hilo para enviar el feedback al cliente
             @param feedback (CubosActionFeedback) - Feedback
         '''
-        while self._action_server.is_active():
+        while self.action_server.is_active() and self.running:
             feedback.feedback = 1
-            self._action_server.publish_feedback(feedback)
+            self.action_server.publish_feedback(feedback)
             rospy.sleep(0.1)
 
     def _dict_to_cube(self, dict_cubos:list) -> list:
