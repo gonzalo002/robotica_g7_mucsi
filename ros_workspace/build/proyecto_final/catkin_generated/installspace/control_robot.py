@@ -12,6 +12,7 @@ from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion
 from sensor_msgs.msg import JointState
 import yaml
 from actionlib import SimpleActionClient
+from proyecto_final.funciones_auxiliares import crear_mensaje
 
 class ControlRobot:
     def __init__(self, group_name:str = 'robot', train_env:bool = False) -> None:
@@ -29,6 +30,7 @@ class ControlRobot:
         self.SubsGripEffort = rospy.Subscriber("/rg2/grip_detected", Bool, self._gripper_effort_callback)
         self.get_gripper_state = False
         self.get_gripper_effort = False
+        self.name = "ControlRobot"
 
         self.train_env = train_env
         if train_env:
@@ -57,33 +59,32 @@ class ControlRobot:
     def move_jointstates_trayectory(self, trajectory:list = []) -> bool:
         for i in range(len(trajectory)):
             state = self.move_jointstates(trajectory[i])
-            rospy.loginfo(f'Punto {i} alcanzado \n')
-            if not state: print('Trayectoria Fallida'); return False
-        rospy.loginfo('Trayectoria Finalizada')
+            crear_mensaje(f"Punto {i} alcanzado", "INFO", self.name)
+            if not state: crear_mensaje(f"Trayectoria fallida", "ERROR", self.name); return False
+        crear_mensaje(f"Trayectoria alzanzada", "SUCCESS", self.name)
         return state
     
     def move_pose_trayectory(self, trajectory:list = []) -> bool:
         for i in range(len(trajectory)):
             state = self.move_pose(trajectory[i])
-            rospy.loginfo(f'Punto {i} alcanzado \n')
-            if not state: print('Trayectoria Fallida'); return False
-        rospy.loginfo('Trayectoria Finalizada')
+            crear_mensaje(f"Punto {i} alcanzado", "INFO", self.name)
+            if not state: crear_mensaje(f"Trayectoria fallida", "ERROR", self.name); return False
+        crear_mensaje(f"Trayectoria alzanzada", "SUCCESS", self.name)
         return state
     
     def move_carthesian_trayectory(self, waypoints:list = [], eef_step:Float32 = 0.01, avoid_collisions:bool = True ,wait:bool = True) -> bool:
         if eef_step == 0.0:
             eef_step = 0.01
-            print('eef_step modificado a valor 0.01 por requisitos de funcionamiento')
+            crear_mensaje("Parámetro eef_step modificado a valor 0.01 por requisitos de funcionamiento", "INFO", self.name)
             
         waypoints.insert(0, self.get_pose())
         (plan, fraction) = self.move_group.compute_cartesian_path(waypoints, eef_step = eef_step, avoid_collisions= avoid_collisions)
         
         if fraction != 1.0:
-            rospy.logwarn('Trayectoria Inalcanzable')
-            rospy.loginfo(f'Porcentaje de la trayectoria alcanzable: {fraction*100:.2f}%')
+            crear_mensaje(f"Trayectoria Inalcanzable. Porcentaje de la trayectoria alcanzable: {fraction*100:.2f}%", "WARN", self.name)
             return False
         else: 
-            rospy.loginfo('Ejecutando Trayectoria')
+            crear_mensaje(f"Ejecutando Trayectoria", "INFO", self.name)
             return self.move_group.execute(plan, wait=wait)
         
     def add_box_obstacle(self, box_name:String, box_pose:Pose, size:tuple = (.1, .1, .1)) -> None:
@@ -142,15 +143,17 @@ class ControlRobot:
     def _rad_to_width(self, data:float = 0.0) -> None:
         return data * pi / 180
     
-    def move_gripper(self, gripper_width: float, max_effort: float, sleep_time:float = 0.0) -> bool:
+    def move_gripper(self, gripper_width: float, max_effort: float, sleep_before:float = 0.4, sleep_after:float = 0.2) -> bool:
         goal = GripperCommandGoal()
         goal.command.position = gripper_width
         goal.command.max_effort = max_effort
+        
+        rospy.sleep(sleep_before)
         self.gripper_action_client.send_goal(goal)
         self.gripper_action_client.wait_for_result()
         result = self.gripper_action_client.get_result()
 
-        rospy.sleep(sleep_time)
+        rospy.sleep(sleep_after)
         
         return result.reached_goal
     

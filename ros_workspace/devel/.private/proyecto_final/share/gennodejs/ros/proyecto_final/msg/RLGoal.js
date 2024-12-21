@@ -69,7 +69,7 @@ class RLGoal {
 
   static getMessageSize(object) {
     let length = 0;
-    length += 57 * object.cubes_position.length;
+    length += 58 * object.cubes_position.length;
     length += object.cubes_order.length;
     return length + 8;
   }
@@ -81,7 +81,7 @@ class RLGoal {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '00c77b90e2e9e683fc61ff6f0f03ee7d';
+    return '83c412d568b0417d8134b1cace65cf4e';
   }
 
   static messageDefinition() {
@@ -94,6 +94,7 @@ class RLGoal {
     
     ================================================================================
     MSG: proyecto_final/IdCubos
+    int8 id
     int8 color
     geometry_msgs/Pose pose
     ================================================================================

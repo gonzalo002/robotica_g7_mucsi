@@ -25,16 +25,21 @@ struct IdCubos_
   typedef IdCubos_<ContainerAllocator> Type;
 
   IdCubos_()
-    : color(0)
+    : id(0)
+    , color(0)
     , pose()  {
     }
   IdCubos_(const ContainerAllocator& _alloc)
-    : color(0)
+    : id(0)
+    , color(0)
     , pose(_alloc)  {
   (void)_alloc;
     }
 
 
+
+   typedef int8_t _id_type;
+  _id_type id;
 
    typedef int8_t _color_type;
   _color_type color;
@@ -71,7 +76,8 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::proyecto_final::IdCubos_<ContainerAllocator1> & lhs, const ::proyecto_final::IdCubos_<ContainerAllocator2> & rhs)
 {
-  return lhs.color == rhs.color &&
+  return lhs.id == rhs.id &&
+    lhs.color == rhs.color &&
     lhs.pose == rhs.pose;
 }
 
@@ -129,12 +135,12 @@ struct MD5Sum< ::proyecto_final::IdCubos_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "7d40436a98b00a5347eed8cfb3ef00bf";
+    return "96d46c44a0bde575500400fd06523183";
   }
 
   static const char* value(const ::proyecto_final::IdCubos_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0x7d40436a98b00a53ULL;
-  static const uint64_t static_value2 = 0x47eed8cfb3ef00bfULL;
+  static const uint64_t static_value1 = 0x96d46c44a0bde575ULL;
+  static const uint64_t static_value2 = 0x500400fd06523183ULL;
 };
 
 template<class ContainerAllocator>
@@ -153,7 +159,8 @@ struct Definition< ::proyecto_final::IdCubos_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "int8 color\n"
+    return "int8 id\n"
+"int8 color\n"
 "geometry_msgs/Pose pose\n"
 "================================================================================\n"
 "MSG: geometry_msgs/Pose\n"
@@ -194,6 +201,7 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
+      stream.next(m.id);
       stream.next(m.color);
       stream.next(m.pose);
     }
@@ -214,6 +222,8 @@ struct Printer< ::proyecto_final::IdCubos_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::proyecto_final::IdCubos_<ContainerAllocator>& v)
   {
+    s << indent << "id: ";
+    Printer<int8_t>::stream(s, indent + "  ", v.id);
     s << indent << "color: ";
     Printer<int8_t>::stream(s, indent + "  ", v.color);
     s << indent << "pose: ";

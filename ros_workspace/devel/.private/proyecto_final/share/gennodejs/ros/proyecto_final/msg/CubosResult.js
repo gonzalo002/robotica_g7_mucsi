@@ -69,7 +69,7 @@ class CubosResult {
 
   static getMessageSize(object) {
     let length = 0;
-    length += 57 * object.cubes_position.length;
+    length += 58 * object.cubes_position.length;
     length += object.color_counter.length;
     return length + 8;
   }
@@ -81,7 +81,7 @@ class CubosResult {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'debac677ee83137ba7b82eb4dd288a9f';
+    return '8c138b54440a97ee67016d11125559b2';
   }
 
   static messageDefinition() {
@@ -94,6 +94,7 @@ class CubosResult {
     
     ================================================================================
     MSG: proyecto_final/IdCubos
+    int8 id
     int8 color
     geometry_msgs/Pose pose
     ================================================================================

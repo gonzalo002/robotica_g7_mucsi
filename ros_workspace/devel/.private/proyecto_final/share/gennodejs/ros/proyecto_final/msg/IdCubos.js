@@ -19,10 +19,17 @@ class IdCubos {
   constructor(initObj={}) {
     if (initObj === null) {
       // initObj === null is a special case for deserialization where we don't initialize fields
+      this.id = null;
       this.color = null;
       this.pose = null;
     }
     else {
+      if (initObj.hasOwnProperty('id')) {
+        this.id = initObj.id
+      }
+      else {
+        this.id = 0;
+      }
       if (initObj.hasOwnProperty('color')) {
         this.color = initObj.color
       }
@@ -40,6 +47,8 @@ class IdCubos {
 
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type IdCubos
+    // Serialize message field [id]
+    bufferOffset = _serializer.int8(obj.id, buffer, bufferOffset);
     // Serialize message field [color]
     bufferOffset = _serializer.int8(obj.color, buffer, bufferOffset);
     // Serialize message field [pose]
@@ -51,6 +60,8 @@ class IdCubos {
     //deserializes a message object of type IdCubos
     let len;
     let data = new IdCubos(null);
+    // Deserialize message field [id]
+    data.id = _deserializer.int8(buffer, bufferOffset);
     // Deserialize message field [color]
     data.color = _deserializer.int8(buffer, bufferOffset);
     // Deserialize message field [pose]
@@ -59,7 +70,7 @@ class IdCubos {
   }
 
   static getMessageSize(object) {
-    return 57;
+    return 58;
   }
 
   static datatype() {
@@ -69,12 +80,13 @@ class IdCubos {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '7d40436a98b00a5347eed8cfb3ef00bf';
+    return '96d46c44a0bde575500400fd06523183';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
+    int8 id
     int8 color
     geometry_msgs/Pose pose
     ================================================================================
@@ -108,6 +120,13 @@ class IdCubos {
       msg = {};
     }
     const resolved = new IdCubos(null);
+    if (msg.id !== undefined) {
+      resolved.id = msg.id;
+    }
+    else {
+      resolved.id = 0
+    }
+
     if (msg.color !== undefined) {
       resolved.color = msg.color;
     }

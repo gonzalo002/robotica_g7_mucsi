@@ -3,64 +3,64 @@
 
 let IdCubos = require('./IdCubos.js');
 let HandData = require('./HandData.js');
-let FigurasFeedback = require('./FigurasFeedback.js');
-let CubosResult = require('./CubosResult.js');
-let RLActionFeedback = require('./RLActionFeedback.js');
-let RLGoal = require('./RLGoal.js');
-let RLActionResult = require('./RLActionResult.js');
 let HandAction = require('./HandAction.js');
-let HandFeedback = require('./HandFeedback.js');
-let RLResult = require('./RLResult.js');
-let CubosActionFeedback = require('./CubosActionFeedback.js');
-let RLAction = require('./RLAction.js');
-let FigurasAction = require('./FigurasAction.js');
-let HandResult = require('./HandResult.js');
-let FigurasActionFeedback = require('./FigurasActionFeedback.js');
-let CubosFeedback = require('./CubosFeedback.js');
-let HandActionFeedback = require('./HandActionFeedback.js');
-let FigurasActionGoal = require('./FigurasActionGoal.js');
-let RLFeedback = require('./RLFeedback.js');
-let HandGoal = require('./HandGoal.js');
-let FigurasGoal = require('./FigurasGoal.js');
-let HandActionResult = require('./HandActionResult.js');
-let CubosActionResult = require('./CubosActionResult.js');
-let CubosGoal = require('./CubosGoal.js');
-let RLActionGoal = require('./RLActionGoal.js');
-let FigurasActionResult = require('./FigurasActionResult.js');
-let CubosActionGoal = require('./CubosActionGoal.js');
-let FigurasResult = require('./FigurasResult.js');
 let HandActionGoal = require('./HandActionGoal.js');
+let RLAction = require('./RLAction.js');
+let FigurasResult = require('./FigurasResult.js');
+let HandGoal = require('./HandGoal.js');
+let FigurasActionFeedback = require('./FigurasActionFeedback.js');
+let RLActionResult = require('./RLActionResult.js');
+let RLFeedback = require('./RLFeedback.js');
+let CubosGoal = require('./CubosGoal.js');
+let FigurasActionResult = require('./FigurasActionResult.js');
+let CubosResult = require('./CubosResult.js');
+let RLGoal = require('./RLGoal.js');
+let HandActionResult = require('./HandActionResult.js');
+let HandFeedback = require('./HandFeedback.js');
+let FigurasActionGoal = require('./FigurasActionGoal.js');
 let CubosAction = require('./CubosAction.js');
+let FigurasFeedback = require('./FigurasFeedback.js');
+let FigurasAction = require('./FigurasAction.js');
+let RLActionFeedback = require('./RLActionFeedback.js');
+let CubosActionResult = require('./CubosActionResult.js');
+let CubosFeedback = require('./CubosFeedback.js');
+let HandResult = require('./HandResult.js');
+let CubosActionFeedback = require('./CubosActionFeedback.js');
+let RLResult = require('./RLResult.js');
+let CubosActionGoal = require('./CubosActionGoal.js');
+let FigurasGoal = require('./FigurasGoal.js');
+let HandActionFeedback = require('./HandActionFeedback.js');
+let RLActionGoal = require('./RLActionGoal.js');
 
 module.exports = {
   IdCubos: IdCubos,
   HandData: HandData,
-  FigurasFeedback: FigurasFeedback,
-  CubosResult: CubosResult,
-  RLActionFeedback: RLActionFeedback,
-  RLGoal: RLGoal,
-  RLActionResult: RLActionResult,
   HandAction: HandAction,
-  HandFeedback: HandFeedback,
-  RLResult: RLResult,
-  CubosActionFeedback: CubosActionFeedback,
-  RLAction: RLAction,
-  FigurasAction: FigurasAction,
-  HandResult: HandResult,
-  FigurasActionFeedback: FigurasActionFeedback,
-  CubosFeedback: CubosFeedback,
-  HandActionFeedback: HandActionFeedback,
-  FigurasActionGoal: FigurasActionGoal,
-  RLFeedback: RLFeedback,
-  HandGoal: HandGoal,
-  FigurasGoal: FigurasGoal,
-  HandActionResult: HandActionResult,
-  CubosActionResult: CubosActionResult,
-  CubosGoal: CubosGoal,
-  RLActionGoal: RLActionGoal,
-  FigurasActionResult: FigurasActionResult,
-  CubosActionGoal: CubosActionGoal,
-  FigurasResult: FigurasResult,
   HandActionGoal: HandActionGoal,
+  RLAction: RLAction,
+  FigurasResult: FigurasResult,
+  HandGoal: HandGoal,
+  FigurasActionFeedback: FigurasActionFeedback,
+  RLActionResult: RLActionResult,
+  RLFeedback: RLFeedback,
+  CubosGoal: CubosGoal,
+  FigurasActionResult: FigurasActionResult,
+  CubosResult: CubosResult,
+  RLGoal: RLGoal,
+  HandActionResult: HandActionResult,
+  HandFeedback: HandFeedback,
+  FigurasActionGoal: FigurasActionGoal,
   CubosAction: CubosAction,
+  FigurasFeedback: FigurasFeedback,
+  FigurasAction: FigurasAction,
+  RLActionFeedback: RLActionFeedback,
+  CubosActionResult: CubosActionResult,
+  CubosFeedback: CubosFeedback,
+  HandResult: HandResult,
+  CubosActionFeedback: CubosActionFeedback,
+  RLResult: RLResult,
+  CubosActionGoal: CubosActionGoal,
+  FigurasGoal: FigurasGoal,
+  HandActionFeedback: HandActionFeedback,
+  RLActionGoal: RLActionGoal,
 };

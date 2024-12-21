@@ -86,7 +86,7 @@ class RLActionGoal {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '05f6919369d489c2464951d9e1d38cc7';
+    return '2b0f4b83409e570f68b90356a0645c98';
   }
 
   static messageDefinition() {
@@ -136,6 +136,7 @@ class RLActionGoal {
     
     ================================================================================
     MSG: proyecto_final/IdCubos
+    int8 id
     int8 color
     geometry_msgs/Pose pose
     ================================================================================

@@ -86,7 +86,7 @@ class CubosActionResult {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return '00cb8b3c87923c946f41ff486d92cfe0';
+    return '0864461db967d57e3ec9dfcf2da727ad';
   }
 
   static messageDefinition() {
@@ -162,6 +162,7 @@ class CubosActionResult {
     
     ================================================================================
     MSG: proyecto_final/IdCubos
+    int8 id
     int8 color
     geometry_msgs/Pose pose
     ================================================================================

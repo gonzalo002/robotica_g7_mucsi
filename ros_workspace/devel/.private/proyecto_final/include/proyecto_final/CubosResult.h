@@ -129,12 +129,12 @@ struct MD5Sum< ::proyecto_final::CubosResult_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "debac677ee83137ba7b82eb4dd288a9f";
+    return "8c138b54440a97ee67016d11125559b2";
   }
 
   static const char* value(const ::proyecto_final::CubosResult_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xdebac677ee83137bULL;
-  static const uint64_t static_value2 = 0xa7b82eb4dd288a9fULL;
+  static const uint64_t static_value1 = 0x8c138b54440a97eeULL;
+  static const uint64_t static_value2 = 0x67016d11125559b2ULL;
 };
 
 template<class ContainerAllocator>
@@ -160,6 +160,7 @@ struct Definition< ::proyecto_final::CubosResult_<ContainerAllocator> >
 "\n"
 "================================================================================\n"
 "MSG: proyecto_final/IdCubos\n"
+"int8 id\n"
 "int8 color\n"
 "geometry_msgs/Pose pose\n"
 "================================================================================\n"

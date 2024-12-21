@@ -1,67 +1,49 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="2">
-  <name>ur_robot_driver</name>
-  <version>2.1.2</version>
-  <description>The new driver for Universal Robots UR3, UR5 and UR10 robots with CB3 controllers and the e-series.</description>
-  <author>Thomas Timm Andersen</author>
-  <author>Simon Rasmussen</author>
-  <author>Felix Exner</author>
-  <author>Lea Steffen</author>
-  <author>Tristan Schnell</author>
-  <maintainer email="exner@fzi.de">Felix Exner</maintainer>
-  <license>Apache-2.0</license>
-  <license>BSD-2-Clause</license>
-  <license>Zlib</license>
+<?xml-model
+  href="http://download.ros.org/schema/package_format3.xsd"
+  schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>catkin</name>
+  <version>0.8.10</version>
+  <description>Low-level build system macros and infrastructure for ROS.</description>
+  <maintainer email="michael@openrobotics.org">Michael Carroll</maintainer>
+  <maintainer email="tfoote@openrobotics.org">Tully Foote</maintainer>
+  <license>BSD</license>
 
-  <url type="website">http://wiki.ros.org/ur_robot_driver</url>
-  <url type="bugtracker">https://github.com/UniversalRobots/Universal_Robots_ROS_Driver/issues</url>
-  <url type="repository">https://github.com/UniversalRobots/Universal_Robots_ROS_Driver</url>
+  <url type="website">http://wiki.ros.org/catkin</url>
+  <url type="bugtracker">https://github.com/ros/catkin/issues</url>
+  <url type="repository">https://github.com/ros/catkin</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <author>Troy Straszheim</author>
+  <author>Morten Kjaergaard</author>
+  <author>Brian Gerkey</author>
+  <author>Dirk Thomas</author>
 
-  <build_depend>boost</build_depend>
-  <build_depend>industrial_robot_status_interface</build_depend>
+  <depend condition="$ROS_PYTHON_VERSION == 2">python-argparse</depend>
+  <depend condition="$ROS_PYTHON_VERSION == 2" version_gt="0.4.3">python-catkin-pkg</depend>
+  <depend condition="$ROS_PYTHON_VERSION == 3" version_gt="0.4.3">python3-catkin-pkg</depend>
+  <depend condition="$ROS_PYTHON_VERSION == 2">python-empy</depend>
+  <depend condition="$ROS_PYTHON_VERSION == 3">python3-empy</depend>
 
-  <depend>actionlib</depend>
-  <depend>control_msgs</depend>
-  <depend>controller_manager</depend>
-  <depend>controller_manager_msgs</depend>
-  <depend>geometry_msgs</depend>
-  <depend>hardware_interface</depend>
-  <depend>kdl_parser</depend>
-  <depend>pass_through_controllers</depend>
-  <depend>pluginlib</depend>
-  <depend>roscpp</depend>
-  <depend>scaled_joint_trajectory_controller</depend>
-  <depend>sensor_msgs</depend>
-  <depend>speed_scaling_interface</depend>
-  <depend>speed_scaling_state_controller</depend>
-  <depend>std_srvs</depend>
-  <depend>tf2_geometry_msgs</depend>
-  <depend>tf2_msgs</depend>
-  <depend>tf</depend>
-  <depend>trajectory_msgs</depend>
-  <depend>ur_client_library</depend>
-  <depend>ur_dashboard_msgs</depend>
-  <depend>ur_msgs</depend>
+  <buildtool_depend>cmake</buildtool_depend>
+  <buildtool_depend condition="$ROS_PYTHON_VERSION == 2">python-setuptools</buildtool_depend>
+  <buildtool_depend condition="$ROS_PYTHON_VERSION == 3">python3-setuptools</buildtool_depend>
 
-  <exec_depend>cartesian_trajectory_controller</exec_depend>
-  <exec_depend>force_torque_sensor_controller</exec_depend>
-  <exec_depend>industrial_robot_status_controller</exec_depend>
-  <exec_depend>joint_state_controller</exec_depend>
-  <exec_depend>joint_trajectory_controller</exec_depend>
-  <exec_depend>robot_state_publisher</exec_depend>
-  <exec_depend>socat</exec_depend>
-  <exec_depend>twist_controller</exec_depend>
-  <exec_depend>ur_description</exec_depend>
-  <exec_depend>velocity_controllers</exec_depend>
+  <buildtool_export_depend>cmake</buildtool_export_depend>
+  <buildtool_export_depend condition="$ROS_PYTHON_VERSION == 3">python3-setuptools</buildtool_export_depend>
 
-  <test_depend>rostest</test_depend>
+  <build_export_depend>google-mock</build_export_depend>
+  <build_export_depend>gtest</build_export_depend>
+  <build_export_depend condition="$ROS_PYTHON_VERSION == 2">python-nose</build_export_depend>
+  <build_export_depend condition="$ROS_PYTHON_VERSION == 3">python3-nose</build_export_depend>
+
+  <test_depend condition="$ROS_PYTHON_VERSION == 2">python-mock</test_depend>
+  <test_depend condition="$ROS_PYTHON_VERSION == 3">python3-mock</test_depend>
+  <test_depend condition="$ROS_PYTHON_VERSION == 2">python-nose</test_depend>
+  <test_depend condition="$ROS_PYTHON_VERSION == 3">python3-nose</test_depend>
 
   <export>
-    <hardware_interface plugin="${prefix}/hardware_interface_plugin.xml" />
-    <rosdoc config="doc/rosdoc.yaml" />
+    <rosdoc config="rosdoc.yaml"/>
+    <architecture_independent/>
   </export>
-
 </package>

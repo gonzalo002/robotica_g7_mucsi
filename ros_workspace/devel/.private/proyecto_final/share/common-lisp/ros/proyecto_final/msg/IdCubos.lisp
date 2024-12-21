@@ -7,7 +7,12 @@
 ;//! \htmlinclude IdCubos.msg.html
 
 (cl:defclass <IdCubos> (roslisp-msg-protocol:ros-message)
-  ((color
+  ((id
+    :reader id
+    :initarg :id
+    :type cl:fixnum
+    :initform 0)
+   (color
     :reader color
     :initarg :color
     :type cl:fixnum
@@ -27,6 +32,11 @@
   (cl:unless (cl:typep m 'IdCubos)
     (roslisp-msg-protocol:msg-deprecation-warning "using old message class name proyecto_final-msg:<IdCubos> is deprecated: use proyecto_final-msg:IdCubos instead.")))
 
+(cl:ensure-generic-function 'id-val :lambda-list '(m))
+(cl:defmethod id-val ((m <IdCubos>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:id-val is deprecated.  Use proyecto_final-msg:id instead.")
+  (id m))
+
 (cl:ensure-generic-function 'color-val :lambda-list '(m))
 (cl:defmethod color-val ((m <IdCubos>))
   (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader proyecto_final-msg:color-val is deprecated.  Use proyecto_final-msg:color instead.")
@@ -38,6 +48,9 @@
   (pose m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <IdCubos>) ostream)
   "Serializes a message object of type '<IdCubos>"
+  (cl:let* ((signed (cl:slot-value msg 'id)) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 256) signed)))
+    (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
+    )
   (cl:let* ((signed (cl:slot-value msg 'color)) (unsigned (cl:if (cl:< signed 0) (cl:+ signed 256) signed)))
     (cl:write-byte (cl:ldb (cl:byte 8 0) unsigned) ostream)
     )
@@ -45,6 +58,9 @@
 )
 (cl:defmethod roslisp-msg-protocol:deserialize ((msg <IdCubos>) istream)
   "Deserializes a message object of type '<IdCubos>"
+    (cl:let ((unsigned 0))
+      (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
+      (cl:setf (cl:slot-value msg 'id) (cl:if (cl:< unsigned 128) unsigned (cl:- unsigned 256))))
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
       (cl:setf (cl:slot-value msg 'color) (cl:if (cl:< unsigned 128) unsigned (cl:- unsigned 256))))
@@ -59,24 +75,26 @@
   "proyecto_final/IdCubos")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<IdCubos>)))
   "Returns md5sum for a message object of type '<IdCubos>"
-  "7d40436a98b00a5347eed8cfb3ef00bf")
+  "96d46c44a0bde575500400fd06523183")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'IdCubos)))
   "Returns md5sum for a message object of type 'IdCubos"
-  "7d40436a98b00a5347eed8cfb3ef00bf")
+  "96d46c44a0bde575500400fd06523183")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<IdCubos>)))
   "Returns full string definition for message of type '<IdCubos>"
-  (cl:format cl:nil "int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
+  (cl:format cl:nil "int8 id~%int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'IdCubos)))
   "Returns full string definition for message of type 'IdCubos"
-  (cl:format cl:nil "int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
+  (cl:format cl:nil "int8 id~%int8 color~%geometry_msgs/Pose pose~%================================================================================~%MSG: geometry_msgs/Pose~%# A representation of pose in free space, composed of position and orientation. ~%Point position~%Quaternion orientation~%~%================================================================================~%MSG: geometry_msgs/Point~%# This contains the position of a point in free space~%float64 x~%float64 y~%float64 z~%~%================================================================================~%MSG: geometry_msgs/Quaternion~%# This represents an orientation in free space in quaternion form.~%~%float64 x~%float64 y~%float64 z~%float64 w~%~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <IdCubos>))
   (cl:+ 0
+     1
      1
      (roslisp-msg-protocol:serialization-length (cl:slot-value msg 'pose))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <IdCubos>))
   "Converts a ROS message object to a list"
   (cl:list 'IdCubos
+    (cl:cons ':id (id msg))
     (cl:cons ':color (color msg))
     (cl:cons ':pose (pose msg))
 ))

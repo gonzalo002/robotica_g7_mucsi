@@ -68,14 +68,14 @@ class CubeTrackerActionServer(object):
         feedback_thread = Thread(target=self.send_feedback, args=(feedback,))
         feedback_thread.start()
 
-        img = cv2.imread(f"{self.file_path}/data/example_img/Cubos_Exparcidos/Cubos_Exparcidos_{goal.order}.png")
+        img = cv2.imread(f"{self.file_path}/data/example_img/cubos_exparcidos/Cubos_Exparcidos_{goal.order}.png")
         if img is None:
             crear_mensaje("No se ha podido encontrar la imagen", "ERROR", self.name)
             feedback.feedback = -1
             self.action_server.publish_feedback(feedback)
             self.running = False
             feedback_thread.join()
-            self.action_server.set_aborted(resultado_final)
+            self.action_server.set_aborted()
             return
         
         resultado_final = CubosResult()
@@ -172,6 +172,7 @@ class CubeTrackerActionServer(object):
             @param dict_cubos (list) - Lista con el diccionario de los diferentes cubos
         '''
         cubos = []
+        id = 0
         for dict in dict_cubos:
             # Declaramos IDCubos
             cubo = IdCubos()
@@ -182,13 +183,17 @@ class CubeTrackerActionServer(object):
             cubo.pose.position.z = 0.0125
             cubo.pose.orientation = Quaternion(*quaternion_from_euler(pi, 0, -dict['Angle'], 'sxyz'))
 
-            # Ajustamos el color del cubo
+            # Ajustamos el color del cubo y su id
             cubo.color = dict['Color']
+            cubo.id = id
+
+            #Ajustamos el contador de color
             self.color_counter[cubo.color] += 1
-            
+
             # Guardamos en la lista de cubos
             cubos.append(deepcopy(cubo))
-            
+            id += 1
+
         return cubos
             
             

@@ -2,7 +2,7 @@
 
 # Importaciones Propias
 from proyecto_final.control_robot import ControlRobot
-from action_client_master import MasterClient
+from MasterClient import MasterClient
 from proyecto_final.funciones_auxiliares import crear_mensaje
 
 # Importaciones de Datos
@@ -64,6 +64,7 @@ class SecuenceCommander:
         self.name = "RobotMain"
         self.available_cubes = []
         self.figure_cubes = [0, 0, 0, 0, 0]
+        self.color_name = ["rojo", "verde", "azul", "amarillo", "gris"]
 
         # Clases
         self.robot = ControlRobot('robot')
@@ -98,8 +99,7 @@ class SecuenceCommander:
         if success == True:
             crear_mensaje("JointState alcanzada", "INFO", self.name)
         else:
-            crear_mensaje("JointState inalcanzable", "ERROR")
-            rospy.logwarn('JointState inalcanzable')
+            crear_mensaje("JointState inalcanzable", "ERROR", self.name)
         return success
     
     def _movePose(self, pose:Pose) -> bool:    
@@ -116,14 +116,16 @@ class SecuenceCommander:
             crear_mensaje("La pose NO ha sido alcanzada.", "ERROR", self.name)
         return success
     
+    
     def empty_workspace(self) -> None:
         ''' 
         Libera el espacio de trabajo del robot, moviendo y descartando los cubos encontrados.
             @return None
         '''
-        self.discarded_cubes_id = [[],[],[],[]]
-        if not self.test_figure():
+        if self.cubes == []:
+            crear_mensaje(f"Los cubos sobre la mesa no han sido definidos", "WARN", self.name)
             return
+
         x_min = self.workspace_range['x_min']
         y_min = self.workspace_range['y_min']        
         x_max = self.workspace_range['x_max']        
@@ -131,32 +133,57 @@ class SecuenceCommander:
         
         self._moveJoint(self.j_link_1)     
                 
-        for cube_id, cubo in enumerate(self.cubes):
-            pose = deepcopy(cubo.pose)
-            color = cubo.color
+        for cube in self.cubes:
+            pose:Pose = deepcopy(cube.pose)
+            color = cube.color
             if pose.position.x > x_min and pose.position.x < x_max:
                 if pose.position.y > y_min and pose.position.y < y_max:
-                    if self._pick_cube(pose, cube_id):
+                    if self._pick_cube(pose, cube.id):
                         if self._moveJoint(self.j_discard_origin):
-                            if self._drop_cube(make_figure=False, cube_id=cube_id, matrix_position=[0, color, self.discarded_cubes[color]]):
+                            if self._drop_cube(make_figure=False, cube_id=cube.id, matrix_position=[0, color, self.discarded_cubes[color]]):
                                 self.discarded_cubes[color] += 1
-                                self.discarded_cubes_id[color].append(cube_id)
 
-    def test_figure(self)->bool:
+
+    def _test_figure(self) -> bool:
+        '''
+        Comprueba que la figura que el usuario quiere crear se puede realizar, es decir, 
+        si se disponen de suficientes cubos.
+            @return bool: Booleano que indica si se puede hacer o no.
+        '''
+        if np.all(self.matriz3D == -1):
+            crear_mensaje(f"La figura toadavía no ha sido definida", "WARN", self.name)
+            return False
+        
+        if self.cubes == []:
+            crear_mensaje(f"Los cubos sobre la mesa no han sido definidos", "WARN", self.name)
+            return False
+
+        # Inicializamos contador de cubos (R, V, A, A, G)
         self.figure_cubes = [0, 0, 0, 0, 0]
+
+        # Comprobamos si la longitud de la lista es 5
         if len(self.available_cubes) < 5:
             self.available_cubes.append(0)
+
+        # Contamos los valoeres únicos en la matriz (se devuelve en orden)
         valores_unicos, conteo = np.unique(self.matriz3D, return_counts=True)
         for i, color_id in enumerate(valores_unicos):
             if color_id == 4:
                 if conteo[i] > self.available_cubes[color_id]:
+                    crear_mensaje(f"No hay suficientes cubos {self.color_name[color_id]} para generar la figura", "ERROR", self.name)
                     return False
                     
             elif color_id != -1:
+                # Se comprueba cuántos cubos de cada color se necesitan
                 self.figure_cubes[color_id] = conteo[i]
                 if self.figure_cubes[color_id] > self.available_cubes[color_id]:
+                    crear_mensaje(f"No hay suficientes cubos {self.color_name[color_id]} para generar la figura", "ERROR", self.name)
                     return False
+
+                # Se suma cuantos cubos sobran de cada color para saber los cubos grises disponibles    
                 self.available_cubes[4] += self.available_cubes[color_id] - self.figure_cubes[color_id]
+        
+        crear_mensaje(f"Se disponen de suficientes cubos para generar la figura", "SUCCESS", self.name)
         return True    
         
 
@@ -166,15 +193,14 @@ class SecuenceCommander:
             @return None
         '''
         self._moveJoint(self.j_link_1)
-        pose_matrix = []
         
         cantidad_cubos_figura = deepcopy(self.figure_cubes)
         cant_cubos_disponibles = deepcopy(self.available_cubes)    
 
         x, z, y = self.matriz3D.shape
-        list_poses = []
-        list_cube_id = []
+        pick_up_cubes = []
         
+        # Recorremos la matriz para ir creando la figura.
         for j in range(z):
             for i in range(x):
                 for k in range(y):
@@ -186,35 +212,25 @@ class SecuenceCommander:
                         cubos_grises = (np.array(cant_cubos_disponibles[:-1]) - np.array(cantidad_cubos_figura[:-1]))
                         figure_color = np.nonzero(cubos_grises != 0)[0][0]
                     
-                    for index, cubo in enumerate(reversed(self.cubes)): # Cubos en mesa de trabajo 
-                        if cubo.color == figure_color:
-                            cube_id = len(self.cubes) - index - 1
-                            list_poses.append(cubo.pose)
-                            list_cube_id.append(cube_id)
-                            self.cubes[cube_id].color = -1
-                            pose_matrix.append([i,k,j])
-                            break
-                        
+                    for cube in reversed(self.cubes): # Cubos en mesa de trabajo
+                        cube:IdCubos
+                        if cube.color == figure_color:
+                            self.cubes[cube.id].color = -1
+                            cantidad_cubos_figura[figure_color] -= 1
+                            cant_cubos_disponibles[figure_color] -= 1
 
-                    cantidad_cubos_figura[figure_color] -= 1
-                    cant_cubos_disponibles[figure_color] -= 1    
-
-        for k in range(z):
-            for i in range(x):
-                for j in range(y):                    
-                    pose:Pose = list_poses[0]
-                    if self._pick_cube(pose, list_cube_id[0]):
-                        if self._drop_cube(make_figure=True, cube_id=list_cube_id[0], matrix_position=[i, j, k]):
-                            list_poses.pop(0)
-                            list_cube_id.pop(0)
-                    else:
-                        crear_mensaje('El robot no ha podido dejar el cubo.', 'ERROR', 'RobotMain')
-                        respuesta = crear_mensaje('Aun así, ¿quieres continuar?', 'INPUT', 'RobotMain')
-                        if respuesta == 'n':
-                            raise KeyError('Generación de Figura detenida')
-                        else:
-                            list_poses.pop(0)
-                            list_cube_id.pop(0)
+                            # Colocar el cubo en la zona de la figura
+                            if self._pick_cube(cube.pose, cube.id):
+                                if self._drop_cube(make_figure=True, cube_id=cube.id, matrix_position=[i, j, k]):
+                                    break
+                            else:
+                                crear_mensaje('El robot no ha podido dejar el cubo.', 'ERROR', 'RobotMain')
+                                respuesta = crear_mensaje('Aun así, ¿quieres continuar? (s/n)', 'INPUT', 'RobotMain')
+                                if respuesta == 'n':
+                                    raise KeyError('Generación de Figura detenida')
+                                else:
+                                    break  
+                    
 
 
     def _pick_cube(self, pose:Pose, cube_id:int) -> bool:
@@ -326,7 +342,7 @@ class SecuenceCommander:
         
         
          
-    def track_cubes(self) -> dict:
+    def track_cubes(self, goal:int=0) -> dict:
         ''' 
         Rastrea la posición de los cubos utilizando la cámara superior.
         '''
@@ -334,7 +350,7 @@ class SecuenceCommander:
         self._free_camera_space()
         
         # Llama al Cube Tracker Action
-        cubos = self.action_client.obtain_cube_pose()
+        cubos = self.action_client.obtain_cube_pose(goal)
         
         # Guardamos las posiciones reales de los cubos
         self.cubes = self._cube_to_aruco(cubos)
@@ -349,12 +365,12 @@ class SecuenceCommander:
         '''
         cubo:IdCubos
         lista_cubos = []
-        for i, cubo in enumerate(cubos.cubes_position):
+        for cubo in cubos.cubes_position:
             new_cube = cubo
             new_cube.pose.position.x += self.p_aruco.position.x
             new_cube.pose.position.y += self.p_aruco.position.y  
                    
-            self.robot.add_box_obstacle(f"Cubo_{i}", new_cube.pose, (0.025, 0.025, 0.025))
+            self.robot.add_box_obstacle(f"Cubo_{new_cube.id}", new_cube.pose, (0.025, 0.025, 0.025))
             
             new_cube.pose.position.z = self.altura_z
             lista_cubos.append(new_cube)
@@ -391,7 +407,8 @@ class SecuenceCommander:
         Libera el espacio de la cámara moviendo el robot a una posición fuera del área de visión.
             @return None
         '''
-        self.robot.move_gripper(35.0, 5.0, sleep_after=0.8)
+        if not self.simulation:
+            self.robot.move_gripper(35.0, 5.0, sleep_after=0.8)
         self._moveJoint(self.j_off_camera)  # Mueve el robot a una posición predeterminada fuera del área de la cámara.
 
 
@@ -489,29 +506,29 @@ class SecuenceCommander:
 
 
 if __name__ == '__main__':
-    robot = SecuenceCommander(simulation=False)
+    robot = SecuenceCommander(simulation=True)
     #input("[INFO] ¿Quieres detectar la figura?")
     #robot.detect_figure()
-    #figure_generator = FigureGenerator()
-    #figure_generator._paint_matrix(robot.matriz3D)
+    figure_generator = FigureGenerator()
     robot.matriz3D = np.array(
-                    [[[0, -1, -1, -1, -1]],
-                      [[2, -1, -1, -1, -1]],
-                      [[3, -1, -1, -1, -1]],
+                    [[[-1, -1, -1, -1, -1]],
+                      [[-1, -1, -1, -1, -1]],
+                      [[-1, -1, -1, -1, -1]],
                       [[1, -1, -1, -1, -1]],
-                      [[0,  4,  1,  3,  2]]]
+                      [[0,  4,  -1,  -1,  -1]]]
                     )
+    #figure_generator._paint_matrix(robot.matriz3D)
 
     crear_mensaje("La forma está capturada.", "INFO", robot.name)
     crear_mensaje("¿Quieres localizar los cubos?", "INPUT", robot.name)
-    robot.track_cubes()
+    robot.track_cubes(0)
     
-    crear_mensaje(f"Se han capturado: {len(robot.cubes)}", "INFO", "RobotMain")
-    calibracion = crear_mensaje("¿Quieres calibrar el robot? (s/n)", "INPUT", robot.name)
-    if calibracion == "s":
-        robot.rob_camera_calibration()
+    #crear_mensaje(f"Se han capturado: {len(robot.cubes)}", "INFO", "RobotMain")
+    #calibracion = crear_mensaje("¿Quieres calibrar el robot? (s/n)", "INPUT", robot.name)
+    #if calibracion == "s":
+    #    robot.rob_camera_calibration()
     
-    if robot.test_figure():
+    if robot._test_figure():
         robot.empty_workspace()
         robot.create_figure()
     
