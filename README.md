@@ -85,7 +85,7 @@ Si siempre se va a utilizar el mismo espacio de trabajo, es posible incluir la a
 
 Para comprobar que el sistema funciona correctamente, ejecutar en la terminal donde se ha activado el espacio de trabajo:
 ```bash
-roslaunch launcher_robots_lab_robotica sim_203.launch
+roslaunch launcher_robots_lab_robotica sim_206.launch
 ```
 
 ## Subir Archivos al Repositorio
